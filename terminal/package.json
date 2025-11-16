@@ -1,0 +1,57 @@
+{
+  "name": "dark-x402-terminal",
+  "version": "1.0.0",
+  "description": "Dark X402 Terminal - Privacy-First DeFi Terminal with AI Agents",
+  "main": "dist/index.js",
+  "bin": {
+    "dark-x402": "./dist/index.js",
+    "dx402": "./dist/index.js"
+  },
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "ts-node index.ts",
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "clean": "rm -rf dist",
+    "terminal": "npm run dev"
+  },
+  "keywords": [
+    "defi",
+    "privacy",
+    "solana",
+    "terminal",
+    "ai",
+    "agents",
+    "dark-protocol",
+    "x402"
+  ],
+  "author": "Dark Protocol",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@solana/web3.js": "^1.95.0",
+    "@coral-xyz/anchor": "^0.30.0",
+    "@google/generative-ai": "^0.21.0",
+    "chalk": "^4.1.2",
+    "figlet": "^1.7.0",
+    "inquirer": "^8.2.6",
+    "ora": "^5.4.1",
+    "cli-table3": "^0.6.5",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0",
+    "dotenv": "^16.4.5",
+    "bip39": "^3.1.0",
+    "bip32": "^4.0.0",
+    "tweetnacl": "^1.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/figlet": "^1.5.8",
+    "@types/inquirer": "^8.2.10",
+    "@types/qrcode": "^1.5.5",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

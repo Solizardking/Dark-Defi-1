@@ -35,9 +35,9 @@ export class PrivacyUtils {
   /**
    * Generate spending key commitment
    */
-  static generateSpendingKeyCommitment(spendingKey: Uint8Array): Uint8Array {
+  static async generateSpendingKeyCommitment(spendingKey: Uint8Array): Promise<Uint8Array> {
     // In production, use proper hash function
-    return this.hash(spendingKey);
+    return await this.hash(spendingKey);
   }
 
   /**

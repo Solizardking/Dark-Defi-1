@@ -2,7 +2,9 @@ import { Keypair, PublicKey } from '@solana/web3.js';
 import { DarkProtocolClient } from './client';
 import type { ShieldedAddress, Note, WalletState } from './types';
 import * as bip39 from 'bip39';
-import { derivePath } from 'bip32';
+import BIP32Factory from 'bip32';
+import * as ecc from 'tiny-secp256k1';
+const bip32 = BIP32Factory(ecc);
 
 export class DarkWallet {
   private client: DarkProtocolClient;
@@ -25,7 +27,12 @@ export class DarkWallet {
   ): Promise<DarkWallet> {
     const seed = await bip39.mnemonicToSeed(mnemonic);
     const path = `m/44'/501'/${accountIndex}'/0'`;
-    const derivedSeed = derivePath(path, seed.toString('hex')).key;
+    const node = bip32.fromSeed(seed);
+    const derivedNode = node.derivePath(path);
+    const derivedSeed = derivedNode.privateKey;
+    if (!derivedSeed) {
+      throw new Error('Failed to derive private key');
+    }
     const keypair = Keypair.fromSeed(derivedSeed);
 
     return new DarkWallet(client, keypair);
@@ -69,7 +76,7 @@ export class DarkWallet {
     viewingKey: Uint8Array,
     spendingKeyCommitment: Uint8Array
   ): Promise<string> {
-    const tx = await this.client.program.methods
+    const tx = await (this.client.program.methods as any)
       .createShieldedAddress(Array.from(viewingKey), Array.from(spendingKeyCommitment))
       .accounts({
         payer: this.publicKey,
@@ -117,7 +124,7 @@ export class DarkWallet {
     crypto.getRandomValues(commitment);
     crypto.getRandomValues(nullifier);
 
-    const tx = await this.client.program.methods
+    const tx = await (this.client.program.methods as any)
       .shieldTokens(amount, Array.from(commitment), Array.from(nullifier))
       .accounts({
         user: this.publicKey,
@@ -138,7 +145,7 @@ export class DarkWallet {
     nullifier: Uint8Array,
     proof: Uint8Array
   ): Promise<string> {
-    const tx = await this.client.program.methods
+    const tx = await (this.client.program.methods as any)
       .unshieldTokens(amount, Array.from(nullifier), Array.from(proof))
       .accounts({
         user: this.publicKey,
@@ -164,7 +171,7 @@ export class DarkWallet {
     const proof = new Uint8Array(256);
     const encryptedMemo = memo ? Buffer.from(memo) : Buffer.alloc(0);
 
-    const tx = await this.client.program.methods
+    const tx = await (this.client.program.methods as any)
       .privateTransfer(
         inputNullifiers.map(n => Array.from(n)),
         outputCommitments.map(c => Array.from(c)),

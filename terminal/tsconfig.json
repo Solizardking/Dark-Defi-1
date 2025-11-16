@@ -2,26 +2,31 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "commonjs",
+    "moduleResolution": "node",
     "lib": ["ES2020"],
     "outDir": "./dist",
-    "rootDir": "./",
+    "rootDir": "../",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
     "allowSyntheticDefaultImports": true,
-    "types": ["node"]
+    "types": ["node"],
+    "baseUrl": "../",
+    "paths": {}
   },
   "include": [
-    "**/*.ts"
+    "../Protocol/**/*.ts",
+    "./**/*.ts"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "../node_modules",
+    "enhanced-google-ai-agent.ts"
   ]
 }

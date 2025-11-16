@@ -76,7 +76,7 @@ export class PrivateSwapManager {
     const jupiterRoutePlan = this.encodeRoutePlan(route);
 
     // Execute private swap through Dark Protocol
-    const tx = await this.client.program.methods
+    const tx = await (this.client.program.methods as any)
       .privateSwap(
         params.inputAmount,
         Array.from(inputCommitment),

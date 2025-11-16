@@ -19,17 +19,9 @@ export * from './note-encryption';
 export * from './config';
 
 // Re-export Helius SDK components
-export {
-  createHelius,
-  type CreateSmartTxInput,
-  type SendSmartTransactionInput
-} from 'helius-sdk/rpc';
-
-export {
-  createSmartTransaction,
-  sendSmartTransaction,
-  broadcastTransaction
-} from 'helius-sdk/transactions';
+// export {
+//   createHelius
+// } from 'helius-sdk';
 
 // Version
 export const VERSION = '0.2.0'; // Updated for Zcash Sapling integration

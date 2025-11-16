@@ -1,4 +1,10 @@
 export type DarkProtocol = {
+  "address": "DARKxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXx",
+  "metadata": {
+    "name": "dark_protocol",
+    "version": "0.2.0",
+    "spec": "0.1.0"
+  },
   "version": "0.2.0",
   "name": "dark_protocol",
   "instructions": [
@@ -121,6 +127,12 @@ export type DarkProtocol = {
 };
 
 export const IDL: DarkProtocol = {
+  "address": "DARKxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXx",
+  "metadata": {
+    "name": "dark_protocol",
+    "version": "0.2.0",
+    "spec": "0.1.0"
+  },
   "version": "0.2.0",
   "name": "dark_protocol",
   "instructions": [

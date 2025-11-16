@@ -469,10 +469,10 @@ export class DarkWalletManager {
 
         console.log();
         console.log(this.theme.secondary('Full Viewing Key:'));
-        console.log(this.theme.dim(`  ${fvk.toBase58()}`));
+        console.log(this.theme.dim(`  ${Buffer.from(fvk.ak).toString('hex').slice(0, 64)}...`));
         console.log();
         console.log(this.theme.secondary('Incoming Viewing Key:'));
-        console.log(this.theme.dim(`  ${ivk.toBase58()}`));
+        console.log(this.theme.dim(`  ${Buffer.from(ivk.ivk).toString('hex').slice(0, 64)}...`));
         console.log();
       }
     }

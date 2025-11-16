@@ -30,7 +30,7 @@ export class AIAgentManager {
     const capabilitiesBytes = this.encodeCapabilities(params.capabilities);
     const attestationHash = params.teeAttestation.measurement;
 
-    const tx = await this.client.program.methods
+    const tx = await (this.client.program.methods as any)
       .registerAiAgent(
         params.agentPubkey,
         Array.from(attestationHash),
@@ -55,7 +55,7 @@ export class AIAgentManager {
     proof: Uint8Array;
     executor: PublicKey;
   }): Promise<string> {
-    const tx = await this.client.program.methods
+    const tx = await (this.client.program.methods as any)
       .executeAiAction(
         params.actionType,
         Array.from(params.encryptedParams),
@@ -100,7 +100,7 @@ export class AIAgentManager {
           return false;
         }
 
-        const result = await response.json();
+        const result: any = await response.json();
         return result.valid === true;
       } catch (error) {
         console.error('TEE attestation verification failed:', error);

@@ -72,7 +72,12 @@ export class DarkProtocolClient {
 
     // Load IDL (in production, fetch from chain or bundle)
     const idl = await DarkProtocolClient.loadIdl();
-    const program = new Program(idl as any, programId, provider) as any;
+    const program = new Program(idl as any, provider) as any;
+    
+    // Set the program ID if needed
+    if (config.programId) {
+      (program as any).programId = programId;
+    }
 
     return new DarkProtocolClient(connection, program, helius, config);
   }

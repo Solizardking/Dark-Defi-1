@@ -96,7 +96,7 @@ https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
 
 **GetBlock (Zcash Mainnet):**
 ```
-https://go.getblock.io/ef41756f29904c9b9a84fc9bfbd63018
+https://go.getblock.io/YOUR_GETBLOCK_ZEC_API_KEY
 ```
 
 These keys are hardcoded in the implementation and ready to use!

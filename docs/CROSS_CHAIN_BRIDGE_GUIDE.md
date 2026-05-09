@@ -154,7 +154,7 @@ Both parties happy, no middleman!
 export HELIUS_RPC_URL="https://mainnet.helius-rpc.com/?api-key=YOUR_KEY"
 
 # Zcash (GetBlock)
-export GETBLOCK_ZEC_RPC="https://go.getblock.io/ef41756f29904c9b9a84fc9bfbd63018"
+export GETBLOCK_ZEC_RPC="https://go.getblock.io/YOUR_GETBLOCK_ZEC_API_KEY"
 
 # AI Agent (optional)
 export XAI_API_KEY="xai-YOUR_KEY"

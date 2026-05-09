@@ -68,7 +68,7 @@ All production API keys are set and active:
 ```bash
 ✅ Helius RPC: YOUR_HELIUS_API_KEY
 ✅ Jupiter Ultra: YOUR_JUPITER_API_KEY
-✅ Birdeye API: 16db9dc5f89b4d3eb1c8bd055399ae5a
+✅ Birdeye API: YOUR_BIRDEYE_API_KEY
 ```
 
 ---
@@ -217,7 +217,7 @@ npm start
 ```bash
 NEXT_PUBLIC_RPC_URL=https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
 NEXT_PUBLIC_JUP_SWAP_V1_API_KEY=YOUR_JUPITER_API_KEY
-NEXT_PUBLIC_BIRDEYE_API_KEY=16db9dc5f89b4d3eb1c8bd055399ae5a
+NEXT_PUBLIC_BIRDEYE_API_KEY=YOUR_BIRDEYE_API_KEY
 NEXT_PUBLIC_HELIUS_API_KEY=YOUR_HELIUS_API_KEY
 ```
 

@@ -261,7 +261,7 @@ All configuration is in `.env`:
 
 ```bash
 # Already configured!
-BIRDEYE_API_KEY=16db9dc5f89b4d3eb1c8bd055399ae5a
+BIRDEYE_API_KEY=YOUR_BIRDEYE_API_KEY
 TOKEN_ADDRESS=6H8uyJYrPVcra6Fi7iWh29DXSm8KctzhHRyXmPwKpump
 ```
 
@@ -362,7 +362,7 @@ grep BIRDEYE_API_KEY .env
 
 **Solution 2:** Test connection manually
 ```bash
-curl -H "X-API-KEY: 16db9dc5f89b4d3eb1c8bd055399ae5a" \
+curl -H "X-API-KEY: YOUR_BIRDEYE_API_KEY" \
   "https://public-api.birdeye.so/defi/price?address=6H8uyJYrPVcra6Fi7iWh29DXSm8KctzhHRyXmPwKpump"
 ```
 

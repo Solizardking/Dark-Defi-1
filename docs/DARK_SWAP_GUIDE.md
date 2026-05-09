@@ -47,7 +47,7 @@ You can use the provided key or get your own:
 
 For SOL ↔ ZEC bridge swaps:
 
-- **Provided**: `https://go.getblock.io/ef41756f29904c9b9a84fc9bfbd63018`
+- **Provided**: `https://go.getblock.io/YOUR_GETBLOCK_ZEC_API_KEY`
 - **Get your own**: Visit [getblock.io](https://getblock.io) and sign up
 
 #### xAI API Key (Optional - for AI features)

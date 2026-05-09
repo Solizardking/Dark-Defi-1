@@ -23,6 +23,23 @@ class DarkWalletManager {
      * Setup wallet (create or import)
      */
     async setupWallet(action) {
+        // Check if client is available
+        if (!this.client) {
+            console.log();
+            console.log(this.theme.danger('❌ Dark Protocol client is not available'));
+            console.log();
+            console.log(this.theme.warning('On-chain wallet features require the Dark Protocol client.'));
+            console.log();
+            console.log(this.theme.dim('To fix this:'));
+            console.log(this.theme.dim('  1. Create or edit the .env file in the terminal directory'));
+            console.log(this.theme.dim('  2. Add your HELIUS_API_KEY:'));
+            console.log(this.theme.dim('     HELIUS_API_KEY=your_helius_api_key_here'));
+            console.log(this.theme.dim('  3. Restart the terminal'));
+            console.log();
+            console.log(this.theme.dim('Get your API key at: https://helius.dev'));
+            console.log();
+            throw new Error('Dark Protocol client not initialized');
+        }
         const spinner = (0, ora_1.default)('Setting up wallet...').start();
         try {
             let wallet;

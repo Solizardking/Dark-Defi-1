@@ -46,19 +46,25 @@ class DarkProtocolClient {
         });
         // Load IDL (in production, fetch from chain or bundle)
         const idl = await DarkProtocolClient.loadIdl();
-        const program = new anchor_1.Program(idl, provider);
-        // Set the program ID if needed
-        if (config.programId) {
-            program.programId = programId;
-        }
+        // Create Anchor Program instance
+        // For Anchor 0.30.0: new Program(idl, programId, provider)
+        // We pass programId directly to avoid IDL address parsing issues
+        const program = new anchor_1.Program(idl, programId, provider);
         return new DarkProtocolClient(connection, program, helius, config);
     }
     /**
      * Load program IDL
      */
     static async loadIdl() {
-        // In production, fetch from chain or bundle the IDL
-        return {};
+        // Return a minimal valid IDL structure without address field
+        // The address will be passed separately to the Program constructor
+        // In production, this would be fetched from chain or bundled
+        return {
+            version: '0.1.0',
+            name: 'dark_protocol',
+            instructions: [],
+            accounts: []
+        };
     }
     /**
      * Get protocol state

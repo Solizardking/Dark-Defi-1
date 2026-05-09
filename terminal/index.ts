@@ -10,7 +10,13 @@ import * as dotenv from 'dotenv';
 import chalk from 'chalk';
 
 // Load environment variables
-dotenv.config();
+// Try loading from terminal directory first, then current working directory
+import { resolve } from 'path';
+
+// Load .env from terminal directory if running from project root, otherwise use default
+const terminalEnvPath = resolve(process.cwd(), 'terminal', '.env');
+dotenv.config({ path: terminalEnvPath });
+dotenv.config(); // Fallback to default location (current directory)
 
 // Check for required API keys
 function checkEnvironment() {

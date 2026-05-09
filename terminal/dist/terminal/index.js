@@ -45,7 +45,12 @@ const x402_terminal_1 = require("./x402-terminal");
 const dotenv = __importStar(require("dotenv"));
 const chalk_1 = __importDefault(require("chalk"));
 // Load environment variables
-dotenv.config();
+// Try loading from terminal directory first, then current working directory
+const path_1 = require("path");
+// Load .env from terminal directory if running from project root, otherwise use default
+const terminalEnvPath = (0, path_1.resolve)(process.cwd(), 'terminal', '.env');
+dotenv.config({ path: terminalEnvPath });
+dotenv.config(); // Fallback to default location (current directory)
 // Check for required API keys
 function checkEnvironment() {
     const required = ['HELIUS_API_KEY'];

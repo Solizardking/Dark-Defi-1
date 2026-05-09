@@ -41,26 +41,48 @@ class X402Terminal {
      */
     async initialize() {
         const spinner = (0, ora_1.default)({
-            text: this.theme.dim('Initializing Dark Protocol...'),
+            text: this.theme.dim('Initializing Dark X402 Terminal...'),
             color: 'magenta',
         }).start();
         try {
-            // Initialize Dark Protocol client
-            this.client = await Protocol_1.DarkProtocolClient.create({
-                heliusApiKey: process.env.HELIUS_API_KEY,
-                network: process.env.NETWORK || 'devnet',
-                useSecureRpc: true,
-                jupiterApiKey: process.env.JUPITER_API_KEY,
-                redpillApiKey: process.env.REDPILL_API_KEY,
-            });
-            // Initialize managers
-            this.swapManager = new Protocol_1.PrivateSwapManager(this.client, process.env.JUPITER_API_KEY);
-            this.aiManager = new Protocol_1.AIAgentManager(this.client, process.env.REDPILL_API_KEY);
-            this.x402Agents = new x402_agents_1.X402AgentManager(this.client, this.aiManager);
-            this.googleAI = new google_ai_agent_1.GoogleGenAIAgent(process.env.GOOGLE_AI_API_KEY);
-            this.darkSwapUI = new dark_swap_ui_1.DarkSwapUI(this.swapManager, this.theme);
-            this.walletManager = new dark_wallet_manager_1.DarkWalletManager(this.client, this.theme);
-            spinner.succeed(this.theme.success('Dark Protocol initialized ✓'));
+            // Initialize Google AI (doesn't need Dark Protocol client)
+            if (process.env.GOOGLE_AI_API_KEY) {
+                this.googleAI = new google_ai_agent_1.GoogleGenAIAgent(process.env.GOOGLE_AI_API_KEY);
+            }
+            // Try to initialize Dark Protocol client
+            if (!process.env.HELIUS_API_KEY) {
+                spinner.warn(this.theme.warning('HELIUS_API_KEY not found - on-chain features disabled'));
+                console.log(this.theme.dim('  Set HELIUS_API_KEY in .env to enable wallet features'));
+                console.log();
+                // Create wallet manager without client (will show error when used)
+                this.walletManager = new dark_wallet_manager_1.DarkWalletManager(null, this.theme);
+            }
+            else {
+                try {
+                    this.client = await Protocol_1.DarkProtocolClient.create({
+                        heliusApiKey: process.env.HELIUS_API_KEY,
+                        network: process.env.NETWORK || 'devnet',
+                        useSecureRpc: true,
+                        jupiterApiKey: process.env.JUPITER_API_KEY,
+                        redpillApiKey: process.env.REDPILL_API_KEY,
+                    });
+                    // Initialize managers that need the client
+                    this.swapManager = new Protocol_1.PrivateSwapManager(this.client, process.env.JUPITER_API_KEY);
+                    this.aiManager = new Protocol_1.AIAgentManager(this.client, process.env.REDPILL_API_KEY);
+                    this.x402Agents = new x402_agents_1.X402AgentManager(this.client, this.aiManager);
+                    this.darkSwapUI = new dark_swap_ui_1.DarkSwapUI(this.swapManager, this.theme);
+                    this.walletManager = new dark_wallet_manager_1.DarkWalletManager(this.client, this.theme);
+                }
+                catch (clientError) {
+                    spinner.warn(this.theme.warning('Dark Protocol client initialization failed'));
+                    console.log(this.theme.dim(`  Error: ${clientError.message || 'Unknown error'}`));
+                    console.log(this.theme.dim('  On-chain features will be disabled'));
+                    console.log();
+                    // Create wallet manager without client (will show error when used)
+                    this.walletManager = new dark_wallet_manager_1.DarkWalletManager(null, this.theme);
+                }
+            }
+            spinner.succeed(this.theme.success('Terminal initialized ✓'));
         }
         catch (error) {
             spinner.fail(this.theme.danger('Initialization failed'));
@@ -109,11 +131,20 @@ class X402Terminal {
                 ],
             },
         ]);
-        this.wallet = await this.walletManager.setupWallet(action);
-        console.log();
-        console.log(this.theme.success('✓ Wallet ready'));
-        console.log(this.theme.dim(`  Address: ${this.wallet.publicKey.toBase58()}`));
-        console.log();
+        try {
+            this.wallet = await this.walletManager.setupWallet(action);
+            console.log();
+            console.log(this.theme.success('✓ Wallet ready'));
+            console.log(this.theme.dim(`  Address: ${this.wallet.publicKey.toBase58()}`));
+            console.log();
+        }
+        catch (error) {
+            // If wallet setup fails (e.g., client not available), show error and exit gracefully
+            console.log();
+            console.log(this.theme.warning('⚠ Wallet setup skipped'));
+            console.log(this.theme.dim('  Continuing without wallet...'));
+            console.log();
+        }
     }
     /**
      * Main terminal loop

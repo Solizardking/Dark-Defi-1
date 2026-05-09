@@ -2,6 +2,7 @@
   "name": "dark-x402-terminal",
   "version": "1.0.0",
   "description": "Dark X402 Terminal - Privacy-First DeFi Terminal with AI Agents",
+  "type": "commonjs",
   "main": "dist/terminal/index.js",
   "bin": {
     "dark-x402": "./dist/terminal/index.js",
@@ -9,7 +10,7 @@
   },
   "scripts": {
     "start": "node dist/terminal/index.js",
-    "dev": "ts-node index.ts",
+    "dev": "ts-node --transpile-only --prefer-ts-exts index.ts",
     "build": "tsc",
     "watch": "tsc --watch",
     "clean": "rm -rf dist",
@@ -30,14 +31,14 @@
   "author": "Dark Protocol",
   "license": "Apache-2.0",
   "dependencies": {
-    "@coral-xyz/anchor": "^0.30.0",
+    "@coral-xyz/anchor": "^0.32.1",
     "@google/generative-ai": "^0.21.0",
     "@noble/ciphers": "^2.0.1",
     "@noble/hashes": "^2.0.1",
-    "@solana/web3.js": "^1.95.0",
+    "@solana/web3.js": "^1.98.4",
     "@types/ws": "^8.18.1",
     "axios": "^1.13.2",
-    "bip32": "^4.0.0",
+    "bip32": "^5.0.0",
     "bip39": "^3.1.0",
     "bs58": "^6.0.0",
     "chalk": "^4.1.2",
@@ -49,6 +50,7 @@
     "ora": "^5.4.1",
     "qrcode": "^1.5.4",
     "qrcode-terminal": "^0.12.0",
+    "tiny-secp256k1": "^2.2.4",
     "tweetnacl": "^1.0.3",
     "ws": "^8.18.3"
   },

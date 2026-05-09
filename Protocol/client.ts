@@ -72,12 +72,11 @@ export class DarkProtocolClient {
 
     // Load IDL (in production, fetch from chain or bundle)
     const idl = await DarkProtocolClient.loadIdl();
-    const program = new Program(idl as any, provider) as any;
-    
-    // Set the program ID if needed
-    if (config.programId) {
-      (program as any).programId = programId;
-    }
+
+    // Create Anchor Program instance
+    // For Anchor 0.30.0: new Program(idl, programId, provider)
+    // We pass programId directly to avoid IDL address parsing issues
+    const program = new Program(idl as any, programId as any, provider as any) as any;
 
     return new DarkProtocolClient(connection, program, helius, config);
   }
@@ -86,8 +85,15 @@ export class DarkProtocolClient {
    * Load program IDL
    */
   private static async loadIdl(): Promise<Idl> {
-    // In production, fetch from chain or bundle the IDL
-    return {} as Idl;
+    // Return a minimal valid IDL structure without address field
+    // The address will be passed separately to the Program constructor
+    // In production, this would be fetched from chain or bundled
+    return {
+      version: '0.1.0',
+      name: 'dark_protocol',
+      instructions: [],
+      accounts: []
+    } as any as Idl;
   }
 
   /**

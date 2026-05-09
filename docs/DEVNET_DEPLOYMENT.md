@@ -34,16 +34,16 @@ The project is pre-configured with Helius RPC endpoints:
 
 ```env
 # Helius Devnet RPC (Standard)
-HELIUS_DEVNET_URL=https://devnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0
+HELIUS_DEVNET_URL=https://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
 
 # Helius Devnet RPC (Secure/Fast)
 HELIUS_SECURE_DEVNET_URL=https://cati-etnoqa-fast-devnet.helius-rpc.com
 
 # Helius Devnet WebSocket
-HELIUS_DEVNET_WSS_URL=wss://devnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0
+HELIUS_DEVNET_WSS_URL=wss://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
 
 # Default RPC for deployment
-SOLANA_RPC_URL=https://devnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0
+SOLANA_RPC_URL=https://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
 ```
 
 ### `Anchor.toml` Configuration
@@ -56,7 +56,7 @@ cluster = "Devnet"
 wallet = "~/.config/solana/id.json"
 
 [provider.devnet]
-cluster = "https://devnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0"
+cluster = "https://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY"
 ```
 
 ## Deployment Steps
@@ -169,7 +169,7 @@ const secureClient = await DarkProtocolClient.create({
 
 ```bash
 # Set environment to devnet
-export ANCHOR_PROVIDER_URL="https://devnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0"
+export ANCHOR_PROVIDER_URL="https://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY"
 
 # Run tests
 anchor test --skip-local-validator

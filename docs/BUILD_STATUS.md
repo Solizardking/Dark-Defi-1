@@ -58,9 +58,9 @@ dist/components/
 
 ### API Keys Configured
 ```bash
-HELIUS_RPC_URL=https://mainnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0
-NEXT_PUBLIC_RPC_URL=https://mainnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0
-NEXT_PUBLIC_JUP_SWAP_V1_API_KEY=99e8e0a1-6059-410a-8317-3efddf46baaa
+HELIUS_RPC_URL=https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
+NEXT_PUBLIC_RPC_URL=https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
+NEXT_PUBLIC_JUP_SWAP_V1_API_KEY=YOUR_JUPITER_API_KEY
 NEXT_PUBLIC_BIRDEYE_API_KEY=16db9dc5f89b4d3eb1c8bd055399ae5a
 ```
 

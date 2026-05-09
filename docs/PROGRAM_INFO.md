@@ -1,6 +1,24 @@
 # 🔑 Dark Protocol - Program Information
 
-This document contains critical program deployment information including program IDs, keypairs, and configuration details.
+> ⚠️ **SECURITY NOTICE — leaked keypairs purged**
+>
+> Earlier revisions of this file pasted seed phrases and raw secret-key byte
+> arrays for the two program-ID keypairs below. Those values were committed
+> to a public GitHub repo and **must be considered permanently compromised.**
+> They have been redacted from this file. The on-chain *upgrade authority*
+> (`5m8qxm4j75VQCv34oUThE5QNbKJG7KHfd85NdK4dVagS`) was **not** in the leak —
+> but the keypair for that authority is **currently unaccounted-for**, so the
+> deployed devnet programs are effectively immutable until that key is found
+> or fresh programs are deployed under new IDs.
+>
+> Going forward: never paste seed phrases, mnemonics, raw `solana-keygen`
+> JSON byte arrays, or any private key material into a doc, comment, commit
+> message, or chat. Keep keypairs in `.secrets/` (gitignored) or a hardware
+> wallet / password manager. Public keys and program IDs are fine to document.
+
+This document contains program deployment information: program IDs, on-chain
+addresses, network deployment status, and configuration. **Private keys and
+seed phrases are deliberately omitted.**
 
 ## 📋 Program IDs
 
@@ -32,43 +50,27 @@ Signature: 3iLxV1XYQyajNSFZ7sqZkC1SZ91hvdtxVN2v48S4FkstUKDcDcQGKu7A2PJXV2ccthT3m
 
 ## 🔐 Keypair Information
 
+> Private keys, mnemonics, and raw `solana-keygen` JSON for these keypairs
+> were previously committed to this repo and are now considered burned.
+> They are **not** documented here. Store keypairs in `.secrets/` (gitignored),
+> a hardware wallet, or a password manager — never in a doc.
+
 ### Dark Protocol Keypair
 
-**Location:** `target/deploy/dark_protocol-keypair.json`
-
-**Seed Phrase (BIP39 Equivalent):**
-```
-occur quarter copy genre today joke insect proof asthma town waste daring
-```
-
-**Public Key (Base58):**
-```
-3KWLFYco7T2rUZkzjSSthjHGmbWmo9HAsRmvupDTomGC
-```
-
-**Raw Keypair (First 32 bytes = Secret Key):**
-```json
-[93,252,0,171,103,3,54,102,89,1,226,224,250,74,199,4,153,98,59,83,59,229,117,92,231,242,221,56,217,131,100,166,34,116,254,126,38,63,210,225,223,76,235,122,156,194,153,44,180,234,213,37,56,149,9,248,11,255,227,50,172,201,4,177]
-```
+- **Program ID (public, on-chain):** `3KWLFYco7T2rUZkzjSSthjHGmbWmo9HAsRmvupDTomGC`
+- **Local keypair file (do NOT commit):** `target/deploy/dark_protocol-keypair.json`
+- **Status:** compromised by the prior leak; only useful for redeploying under the *same* program ID, which is risky to do given the leak.
 
 ### Shielded Wallet Keypair
 
-**Location:** `target/deploy/shielded_wallet-keypair.json`
+- **Program ID (public, on-chain):** `4753b1cCrPzwr7taWWD8yrcM8dc98fTR7wCFdv1TsAbg`
+- **Local keypair file (do NOT commit):** `target/deploy/shielded_wallet-keypair.json`
+- **Status:** compromised by the prior leak; same caveat as above.
 
-**Seed Phrase (BIP39 Equivalent):**
-```
-cat two pledge bean shell artwork song romance remain welcome poverty deposit
-```
+### Upgrade Authority
 
-**Public Key (Base58):**
-```
-4753b1cCrPzwr7taWWD8yrcM8dc98fTR7wCFdv1TsAbg
-```
-
-**Raw Keypair (First 32 bytes = Secret Key):**
-```json
-[98,163,172,184,70,178,201,182,83,123,62,56,190,59,178,89,174,211,95,163,12,120,246,179,190,219,137,112,247,201,151,64,46,33,30,110,55,73,76,8,242,108,108,60,249,217,171,153,163,251,174,100,243,230,160,30,92,29,137,219,193,203,38,207]
-```
+- **Address:** `5m8qxm4j75VQCv34oUThE5QNbKJG7KHfd85NdK4dVagS`
+- **Status:** keypair currently **lost / unaccounted-for**. Until it is recovered, the deployed devnet programs cannot be upgraded or transferred. Plan accordingly: any future change requires either recovering this key or deploying fresh programs under new IDs.
 
 ## 📦 Compiled Binaries
 
@@ -124,7 +126,7 @@ declare_id!("4753b1cCrPzwr7taWWD8yrcM8dc98fTR7wCFdv1TsAbg");
 
 **Devnet (Public):**
 ```
-https://devnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0
+https://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
 ```
 
 **Devnet (Secure):**
@@ -134,7 +136,7 @@ https://cati-etnoqa-fast-devnet.helius-rpc.com
 
 **Mainnet (Public):**
 ```
-https://mainnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0
+https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
 ```
 
 **Mainnet (Secure):**

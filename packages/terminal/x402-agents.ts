@@ -3,11 +3,18 @@
  * Manages multiple specialized AI agents for Dark Protocol operations
  */
 
-import { DarkProtocolClient } from '../Protocol/client';
-import { AIAgentManager } from '../Protocol/ai-agent';
-import { DarkWallet } from '../Protocol/wallet';
-import { PublicKey, Keypair } from '@solana/web3.js';
-import type { AIAgentCapability, TEEAttestation } from '../Protocol/types';
+import {
+  Keypair,
+  PublicKey,
+} from '@solana/web3.js';
+
+import { AIAgentManager } from '../protocol/ai-agent';
+import { DarkProtocolClient } from '../protocol/client';
+import type {
+  AIAgentCapability,
+  TEEAttestation,
+} from '../protocol/types';
+import { DarkWallet } from '../protocol/wallet';
 
 export interface X402Agent {
   id: string;

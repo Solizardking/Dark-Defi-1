@@ -22,7 +22,7 @@ The Enhanced Google Gen AI Agent includes:
 Your `.env` file already has:
 ```bash
 GOOGLE_GENERATIVE_AI_API_KEY=AIzaSyAdNysDBqAEN_TwZOIqrB7K9ZBcsbm-I2w
-HELIUS_RPC_URL=https://mainnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0
+HELIUS_RPC_URL=https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
 ```
 
 ### 2. Import the Agent

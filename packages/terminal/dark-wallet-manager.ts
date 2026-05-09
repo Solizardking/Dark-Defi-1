@@ -3,13 +3,14 @@
  * Terminal interface for managing privacy-preserving wallets
  */
 
+import Table from 'cli-table3';
 import inquirer from 'inquirer';
 import ora from 'ora';
-import Table from 'cli-table3';
 import QRCode from 'qrcode';
-import { DarkProtocolClient } from '../Protocol/client';
-import { DarkWallet } from '../Protocol/wallet';
-import { SaplingHDWallet, SaplingUtils } from '../Protocol/sapling';
+
+import { DarkProtocolClient } from '../protocol/client';
+import { SaplingHDWallet } from '../protocol/sapling';
+import { DarkWallet } from '../protocol/wallet';
 
 export class DarkWalletManager {
   private client: DarkProtocolClient;

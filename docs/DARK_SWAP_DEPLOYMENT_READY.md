@@ -66,8 +66,8 @@
 All production API keys are set and active:
 
 ```bash
-✅ Helius RPC: 6b52d42b-5d24-4841-a093-02b0d2cc9fc0
-✅ Jupiter Ultra: 99e8e0a1-6059-410a-8317-3efddf46baaa
+✅ Helius RPC: YOUR_HELIUS_API_KEY
+✅ Jupiter Ultra: YOUR_JUPITER_API_KEY
 ✅ Birdeye API: 16db9dc5f89b4d3eb1c8bd055399ae5a
 ```
 
@@ -215,10 +215,10 @@ npm start
 
 **Environment Variables** (Set in hosting platform):
 ```bash
-NEXT_PUBLIC_RPC_URL=https://mainnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0
-NEXT_PUBLIC_JUP_SWAP_V1_API_KEY=99e8e0a1-6059-410a-8317-3efddf46baaa
+NEXT_PUBLIC_RPC_URL=https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
+NEXT_PUBLIC_JUP_SWAP_V1_API_KEY=YOUR_JUPITER_API_KEY
 NEXT_PUBLIC_BIRDEYE_API_KEY=16db9dc5f89b4d3eb1c8bd055399ae5a
-NEXT_PUBLIC_HELIUS_API_KEY=6b52d42b-5d24-4841-a093-02b0d2cc9fc0
+NEXT_PUBLIC_HELIUS_API_KEY=YOUR_HELIUS_API_KEY
 ```
 
 ### 4. Post-deployment

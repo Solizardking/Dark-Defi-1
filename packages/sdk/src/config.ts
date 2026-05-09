@@ -17,7 +17,7 @@ export const PROGRAM_IDS = {
  */
 export const RPC_ENDPOINTS = {
   DEVNET: 'https://api.devnet.solana.com',
-  DEVNET_HELIUS: 'https://devnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0',
+  DEVNET_HELIUS: 'https://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY',
   MAINNET: 'https://api.mainnet-beta.solana.com',
   LOCALNET: 'http://localhost:8899',
 };

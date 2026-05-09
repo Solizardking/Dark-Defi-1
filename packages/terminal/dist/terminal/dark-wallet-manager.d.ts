@@ -2,8 +2,8 @@
  * Dark Wallet Manager
  * Terminal interface for managing privacy-preserving wallets
  */
-import { DarkProtocolClient } from '../Protocol/client';
-import { DarkWallet } from '../Protocol/wallet';
+import { DarkProtocolClient } from '../protocol/client';
+import { DarkWallet } from '../protocol/wallet';
 export declare class DarkWalletManager {
     private client;
     private theme;

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(solana program *)",
+      "Bash(mkdir -p packages)",
+      "Bash(git mv *)",
+      "Bash(rmdir sdk *)",
+      "Bash(diff ARCHITECTURE.md docs/ARCHITECTURE.md)",
+      "Bash(echo \"ARCHITECTURE diff: $?\")",
+      "Bash(awk '{print $1}')"
+    ]
+  }
+}

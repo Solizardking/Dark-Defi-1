@@ -40,7 +40,7 @@ cargo build --release
 
 You can use the provided key or get your own:
 
-- **Provided**: `https://mainnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0`
+- **Provided**: `https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY`
 - **Get your own**: Visit [helius.dev](https://helius.dev) and sign up for free tier
 
 #### GetBlock (Required for Cross-Chain)
@@ -59,7 +59,7 @@ For SOL ↔ ZEC bridge swaps:
 
 ```bash
 # Use provided Helius key or replace with your own
-export HELIUS_RPC_URL="https://mainnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0"
+export HELIUS_RPC_URL="https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY"
 export XAI_API_KEY="xai-YOUR_API_KEY"
 
 ./target/release/dark config \

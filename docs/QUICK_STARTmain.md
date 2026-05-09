@@ -42,7 +42,7 @@ cargo build --release
 ./target/release/dark config --show
 
 # Set Helius RPC (already configured)
-export HELIUS_RPC_URL="https://mainnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0"
+export HELIUS_RPC_URL="https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY"
 ./target/release/dark config --network mainnet --rpc $HELIUS_RPC_URL
 
 # Enable Tor privacy
@@ -91,7 +91,7 @@ export HELIUS_RPC_URL="https://mainnet.helius-rpc.com/?api-key=6b52d42b-5d24-484
 
 **Helius RPC (Solana Mainnet):**
 ```
-https://mainnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0
+https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
 ```
 
 **GetBlock (Zcash Mainnet):**

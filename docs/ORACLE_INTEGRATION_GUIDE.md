@@ -54,8 +54,8 @@ export JUPITER_API_KEY="your_jupiter_api_key"  # For higher rate limits
 
 **Configuration:**
 ```bash
-export HELIUS_RPC_URL="https://mainnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0"
-export HELIUS_API_KEY="6b52d42b-5d24-4841-a093-02b0d2cc9fc0"
+export HELIUS_RPC_URL="https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY"
+export HELIUS_API_KEY="YOUR_HELIUS_API_KEY"
 ```
 
 ---

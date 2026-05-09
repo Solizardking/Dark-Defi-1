@@ -2,24 +2,17 @@
   "name": "dark-defi-terminal",
   "version": "1.0.0",
   "description": "Dark Protocol DeFi Terminal with Privacy-Preserving Features",
-  "main": "dist/index.js",
-  "type": "module",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
-    "start": "node dist/index.js"
-  },
-  "dependencies": {
-    "@coral-xyz/anchor": "^0.32.1",
-    "@noble/ciphers": "^2.0.1",
-    "@noble/hashes": "^2.0.1",
-    "@solana/web3.js": "^1.98.4",
-    "bip32": "^5.0.0",
-    "bip39": "^3.1.0",
-    "bs58": "^6.0.0",
-    "helius-sdk": "^2.0.2",
-    "tiny-secp256k1": "^2.2.4",
-    "tweetnacl": "^1.0.3"
+    "build": "npm run build --workspaces --if-present",
+    "build:protocol": "npm run build -w @dark-protocol/sdk --if-present || tsc -p packages/protocol",
+    "build:sdk": "npm run build -w @dark-protocol/sdk",
+    "build:terminal": "npm run build -w dark-x402-terminal",
+    "terminal": "npm run dev -w dark-x402-terminal",
+    "clean": "rm -rf packages/*/dist packages/*/node_modules node_modules"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

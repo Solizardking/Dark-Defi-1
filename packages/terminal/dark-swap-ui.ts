@@ -3,12 +3,14 @@
  * Terminal interface for privacy-preserving token swaps
  */
 
+import Table from 'cli-table3';
 import inquirer from 'inquirer';
 import ora from 'ora';
-import Table from 'cli-table3';
-import { PrivateSwapManager } from '../Protocol/swap';
-import { DarkWallet } from '../Protocol/wallet';
+
 import { PublicKey } from '@solana/web3.js';
+
+import { PrivateSwapManager } from '../protocol/swap';
+import { DarkWallet } from '../protocol/wallet';
 
 // Common token addresses
 const KNOWN_TOKENS = {

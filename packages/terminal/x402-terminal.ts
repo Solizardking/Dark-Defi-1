@@ -4,16 +4,21 @@
  */
 
 import chalk from 'chalk';
+import Table from 'cli-table3';
 import figlet from 'figlet';
 import inquirer from 'inquirer';
 import ora from 'ora';
-import Table from 'cli-table3';
-import { DarkProtocolClient, DarkWallet, PrivateSwapManager, AIAgentManager } from '../Protocol';
-import { PublicKey, Keypair } from '@solana/web3.js';
-import { X402AgentManager } from './x402-agents';
-import { GoogleGenAIAgent } from './google-ai-agent';
+
+import {
+  AIAgentManager,
+  DarkProtocolClient,
+  DarkWallet,
+  PrivateSwapManager,
+} from '../protocol';
 import { DarkSwapUI } from './dark-swap-ui';
 import { DarkWalletManager } from './dark-wallet-manager';
+import { GoogleGenAIAgent } from './google-ai-agent';
+import { X402AgentManager } from './x402-agents';
 
 export class X402Terminal {
   private client!: DarkProtocolClient;

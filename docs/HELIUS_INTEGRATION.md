@@ -12,14 +12,14 @@ All Helius RPC endpoints are configured in [`.env`](.env):
 
 ```bash
 # Mainnet Endpoints
-HELIUS_RPC_URL=https://mainnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0
+HELIUS_RPC_URL=https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
 HELIUS_SECURE_RPC_URL=https://alli-pigt1b-fast-mainnet.helius-rpc.com
-HELIUS_WSS_URL=wss://mainnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0
+HELIUS_WSS_URL=wss://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
 
 # Devnet Endpoints
-HELIUS_DEVNET_URL=https://devnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0
+HELIUS_DEVNET_URL=https://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
 HELIUS_SECURE_DEVNET_URL=https://cati-etnoqa-fast-devnet.helius-rpc.com
-HELIUS_DEVNET_WSS_URL=wss://devnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0
+HELIUS_DEVNET_WSS_URL=wss://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
 ```
 
 ### 2. ✅ Anchor Configuration
@@ -28,13 +28,13 @@ Updated [`Anchor.toml`](Anchor.toml) with secure RPC providers:
 
 ```toml
 [provider.devnet]
-cluster = "https://devnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0"
+cluster = "https://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY"
 
 [provider.devnet-secure]
 cluster = "https://cati-etnoqa-fast-devnet.helius-rpc.com"
 
 [provider.mainnet]
-cluster = "https://mainnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0"
+cluster = "https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY"
 
 [provider.mainnet-secure]
 cluster = "https://alli-pigt1b-fast-mainnet.helius-rpc.com"
@@ -209,7 +209,7 @@ dark-protocol/
 
 ```bash
 # Test devnet
-curl "https://devnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0" \
+curl "https://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY" \
   -X POST \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","id":1,"method":"getHealth"}'

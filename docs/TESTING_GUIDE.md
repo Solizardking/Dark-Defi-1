@@ -66,8 +66,8 @@ export const PROGRAM_IDS = {
 };
 
 export const RPC_ENDPOINTS = {
-  DEVNET: 'https://devnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0',
-  MAINNET: 'https://mainnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0',
+  DEVNET: 'https://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY',
+  MAINNET: 'https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY',
 };
 ```
 

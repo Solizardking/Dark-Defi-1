@@ -13,7 +13,7 @@ const figlet_1 = __importDefault(require("figlet"));
 const inquirer_1 = __importDefault(require("inquirer"));
 const ora_1 = __importDefault(require("ora"));
 const cli_table3_1 = __importDefault(require("cli-table3"));
-const Protocol_1 = require("../Protocol");
+const protocol_1 = require("../protocol");
 const x402_agents_1 = require("./x402-agents");
 const google_ai_agent_1 = require("./google-ai-agent");
 const dark_swap_ui_1 = require("./dark-swap-ui");
@@ -59,7 +59,7 @@ class X402Terminal {
             }
             else {
                 try {
-                    this.client = await Protocol_1.DarkProtocolClient.create({
+                    this.client = await protocol_1.DarkProtocolClient.create({
                         heliusApiKey: process.env.HELIUS_API_KEY,
                         network: process.env.NETWORK || 'devnet',
                         useSecureRpc: true,
@@ -67,8 +67,8 @@ class X402Terminal {
                         redpillApiKey: process.env.REDPILL_API_KEY,
                     });
                     // Initialize managers that need the client
-                    this.swapManager = new Protocol_1.PrivateSwapManager(this.client, process.env.JUPITER_API_KEY);
-                    this.aiManager = new Protocol_1.AIAgentManager(this.client, process.env.REDPILL_API_KEY);
+                    this.swapManager = new protocol_1.PrivateSwapManager(this.client, process.env.JUPITER_API_KEY);
+                    this.aiManager = new protocol_1.AIAgentManager(this.client, process.env.REDPILL_API_KEY);
                     this.x402Agents = new x402_agents_1.X402AgentManager(this.client, this.aiManager);
                     this.darkSwapUI = new dark_swap_ui_1.DarkSwapUI(this.swapManager, this.theme);
                     this.walletManager = new dark_wallet_manager_1.DarkWalletManager(this.client, this.theme);

@@ -3,10 +3,14 @@
  * Uses Google's Gemini API for intelligent DeFi operations
  */
 
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
-import { DarkWallet } from '../Protocol/wallet';
-import { PrivateSwapManager } from '../Protocol/swap';
-import { PublicKey } from '@solana/web3.js';
+import {
+  GoogleGenerativeAI,
+  HarmBlockThreshold,
+  HarmCategory,
+} from '@google/generative-ai';
+
+import { PrivateSwapManager } from '../protocol/swap';
+import { DarkWallet } from '../protocol/wallet';
 
 export interface GoogleAgent {
   id: string;

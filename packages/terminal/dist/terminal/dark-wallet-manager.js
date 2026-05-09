@@ -12,8 +12,8 @@ const inquirer_1 = __importDefault(require("inquirer"));
 const ora_1 = __importDefault(require("ora"));
 const cli_table3_1 = __importDefault(require("cli-table3"));
 const qrcode_1 = __importDefault(require("qrcode"));
-const wallet_1 = require("../Protocol/wallet");
-const sapling_1 = require("../Protocol/sapling");
+const wallet_1 = require("../protocol/wallet");
+const sapling_1 = require("../protocol/sapling");
 class DarkWalletManager {
     constructor(client, theme) {
         this.client = client;

@@ -2,8 +2,8 @@
  * Dark Swap UI
  * Terminal interface for privacy-preserving token swaps
  */
-import { PrivateSwapManager } from '../Protocol/swap';
-import { DarkWallet } from '../Protocol/wallet';
+import { PrivateSwapManager } from '../protocol/swap';
+import { DarkWallet } from '../protocol/wallet';
 export declare class DarkSwapUI {
     private swapManager;
     private theme;

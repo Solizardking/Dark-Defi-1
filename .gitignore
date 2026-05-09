@@ -1,2 +1,21 @@
 node_modules
+
+# Secrets
+.secrets/
 .env
+.env.*
+*.env
+client_secret_*.json
+x402-*.json
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store

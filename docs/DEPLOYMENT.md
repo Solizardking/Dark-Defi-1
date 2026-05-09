@@ -17,14 +17,14 @@ Complete guide for deploying Dark Protocol to Solana with **Helius Secure RPC** 
 The project is pre-configured with **Helius secure RPC endpoints** for both devnet and mainnet:
 
 ### Devnet
-- **Standard RPC:** `https://devnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0`
+- **Standard RPC:** `https://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY`
 - **Secure RPC:** `https://cati-etnoqa-fast-devnet.helius-rpc.com` ⚡ **Recommended**
-- **WebSocket:** `wss://devnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0`
+- **WebSocket:** `wss://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY`
 
 ### Mainnet
-- **Standard RPC:** `https://mainnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0`
+- **Standard RPC:** `https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY`
 - **Secure RPC:** `https://alli-pigt1b-fast-mainnet.helius-rpc.com` ⚡ **Recommended**
-- **WebSocket:** `wss://mainnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0`
+- **WebSocket:** `wss://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY`
 
 **Benefits of Secure RPC:**
 - 🚀 Better performance and lower latency

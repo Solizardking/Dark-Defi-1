@@ -22,11 +22,9 @@ export HELIUS_API_KEY="your_helius_api_key_here"
 export HELIUS_RPC_URL="https://mainnet.helius-rpc.com/?api-key=YOUR_KEY"
 ```
 
-**Provided Key** (for testing):
-```bash
-export HELIUS_RPC_URL="https://mainnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0"
-export HELIUS_API_KEY="6b52d42b-5d24-4841-a093-02b0d2cc9fc0"
-```
+> Earlier versions of this doc included a "provided test key" hardcoded
+> here. That key was leaked publicly via this repo and has been rotated.
+> Do not paste real API keys into docs — use `.env` (gitignored) only.
 
 ---
 
@@ -194,7 +192,7 @@ cd /Users/8bit/Downloads/Dark-Wallet/dark-terminal
 # Configure with provided keys
 ./target/release/dark config \
   --network mainnet \
-  --rpc "https://mainnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0" \
+  --rpc "https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY" \
   --grok-api-key "$XAI_API_KEY"
 
 # Verify configuration

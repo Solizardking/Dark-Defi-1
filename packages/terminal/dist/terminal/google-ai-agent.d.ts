@@ -2,8 +2,8 @@
  * Google Gen AI Agent Integration
  * Uses Google's Gemini API for intelligent DeFi operations
  */
-import { DarkWallet } from '../Protocol/wallet';
-import { PrivateSwapManager } from '../Protocol/swap';
+import { DarkWallet } from '../protocol/wallet';
+import { PrivateSwapManager } from '../protocol/swap';
 export interface GoogleAgent {
     id: string;
     name: string;

@@ -25,8 +25,8 @@ NEXT_PUBLIC_HELIUS_API_KEY=your_helius_key
 
 **Using provided keys for testing**:
 ```bash
-NEXT_PUBLIC_RPC_URL=https://mainnet.helius-rpc.com/?api-key=6b52d42b-5d24-4841-a093-02b0d2cc9fc0
-NEXT_PUBLIC_HELIUS_API_KEY=6b52d42b-5d24-4841-a093-02b0d2cc9fc0
+NEXT_PUBLIC_RPC_URL=https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
+NEXT_PUBLIC_HELIUS_API_KEY=YOUR_HELIUS_API_KEY
 ```
 
 ---

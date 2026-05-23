@@ -5,7 +5,7 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
 [![Solana](https://img.shields.io/badge/Solana-Devnet%20%7C%20Mainnet-9945FF)](https://solana.com)
-[![Status](https://img.shields.io/badge/Status-Alpha-orange)]()
+[![Status](https://img.shields.io/badge/Status-Alpha-orange)](https://github.com/8bitsats/darkterminal)
 
 ---
 
@@ -21,18 +21,14 @@
 
 Think of it as: *"Zcash's shielded pool + Solana's throughput + Jupiter's liquidity + a TEE-isolated AI desk, all driven from a terminal."*
 
-### Why this exists
-
-Public DeFi leaks every position, every entry, every exit to anyone running an indexer. That makes institutional flow impossible (no compliant fund will pre-broadcast its book) and retail flow unsafe (sandwich bots, copy-traders, public wallet scoring). Dark DeFi shields the trade graph itself — not just the wallet ID — so flow and PnL stay private until the user chooses to disclose.
-
 ---
 
 ## Architecture
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────────┐
 │                       Dark X402 Terminal (CLI)                   │
-│   Google Gemini agents · X402 swarm · TradingView widgets        │
+│   Gemini agents · x402 swarm · TradingView widgets               │
 └──────────────────────────────────────────────────────────────────┘
                                 │
                                 ▼
@@ -43,109 +39,67 @@ Public DeFi leaks every position, every entry, every exit to anyone running an i
                                 │
                                 ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│              @dark-protocol/core  (Protocol Client)              │
-│   Anchor program client · TEE attestation · Cross-chain bridge   │
+│              @dark-protocol/tee-agents  (TypeScript)             │
+│   Confidential agents · SAS attestation · x402 payments          │
 └──────────────────────────────────────────────────────────────────┘
                                 │
                                 ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│   On-chain (Solana)             Off-chain                        │
-│   ─────────────────             ─────────                        │
-│   Dark Protocol program         Helius RPC + DAS                 │
-│   Shielded Wallet program       Jupiter Ultra API                │
-│   Encrypted Asset registry      Birdeye oracle                   │
-│   3KWLFYco7T2rUZkzjSSthj…        Google Gemini (in TEE)           │
+│    sas-lib  (local workspace)                                     │
+│    Solana Attestation Service TypeScript client                   │
+│    + Dark DeFi schema extensions (agent identity, receipts)       │
+└──────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌──────────────────────────────────────────────────────────────────┐
+│   On-chain (Solana devnet)      Off-chain                        │
+│   ───────────────────────       ─────────                        │
+│   SAS program (attestation)     Helius RPC + DAS                 │
+│   22zoJMtdu4tQ…                 Jupiter Ultra API                │
+│   Dark Protocol (placeholder)   Birdeye oracle                   │
+│   3KWLFYco7T2r…                 Google Gemini (in TEE)            │
 └──────────────────────────────────────────────────────────────────┘
 ```
-
-### The seven layers (from `docs/DARK_DEFI_VISION.md`)
-
-1. **Cryptographic foundation** — Sapling/Orchard primitives, Pedersen commitments, nullifiers, BLAKE2b PRFs, ZIP-32 HD keys.
-2. **Dark pools** — Encrypted constant-product AMMs and FHE order matchers; Jupiter V6 for price discovery.
-3. **eAsset wrapping** — `eSOL`, `eBTC`, `eETH`, `eUSDC` — tokens with encrypted balances that can be added/multiplied/compared without decryption.
-4. **Fully Homomorphic Encryption** — `Swap(E(amount), E(price)) = E(output)` so swap math runs on ciphertext.
-5. **Threshold ElGamal** — Distributed-trust key custody; t-of-n decryption for compliant view-key sharing.
-6. **Ephemeral accounts** — Single-use addresses break transaction-graph linkability.
-7. **AI agents in TEE** — Gemini-driven analysis and execution with attested measurement; agent capabilities are scoped on-chain (`maxAmount`, `requiresApproval`).
 
 ---
 
 ## Repository Layout
 
-```
+```text
 dark-defi-terminal/
 ├── packages/
-│   ├── protocol/            # @dark-protocol/core — protocol client, AI agent mgr, sapling
-│   ├── sdk/                 # @dark-protocol/sdk — TypeScript SDK with React components
+│   ├── protocol/            # @dark-protocol/core — TypeScript protocol client, AI agent manager
+│   ├── sdk/                 # @dark-protocol/sdk   — TypeScript SDK (Sapling, wallet, swap, oracle)
+│   ├── sas-lib/             # sas-lib              — SAS client + Dark schema extensions (local workspace)
 │   ├── tee-agents/          # @dark-protocol/tee-agents — confidential AI agents, SAS attestation, x402
-│   ├── terminal/            # dark-x402-terminal — interactive CLI + web shell
+│   ├── terminal/            # dark-x402-terminal   — interactive CLI + web shell
 │   └── tradingview-example/ # Reference TradingView charting integration
 ├── docs/                    # Architecture, integration guides, deployment notes
-│   └── legacy/              # Older drafts kept for history
 ├── scripts/                 # darkboot.sh and other ops scripts
 ├── .secrets/                # Local-only env + key files (gitignored)
-├── package.json             # npm workspaces root
-└── README.md                # You are here
+└── package.json             # npm workspaces root
 ```
 
 ---
 
-## Quick Start
+## Package Reference
 
-### Prerequisites
+### `@dark-protocol/sdk` · [packages/sdk/](packages/sdk/)
 
-- Node.js **≥ 18**
-- A [Helius](https://helius.xyz) API key (required)
-- Optional: Jupiter, Birdeye, Google AI, RedPill API keys
+The core TypeScript SDK. Import this for wallet creation, shielded addresses, note encryption, private swaps, and oracle-guarded price checks.
 
-### Install & build
+**Implemented:**
 
-```bash
-git clone https://github.com/8bitsats/darkterminal.git
-cd darkterminal
-npm install                 # installs all workspaces
-npm run build               # builds sdk, tee-agents, terminal
-```
-
-Or use the animated one-shot installer (installs, builds, scaffolds secrets):
-
-```bash
-npm run install:dark        # or: ./scripts/install-dark.sh --demo
-```
-
-### Configure secrets
-
-```bash
-cp .env.example .secrets/.env
-# edit .secrets/.env and add at minimum HELIUS_API_KEY
-ln -sf ../../.secrets/.env packages/terminal/.env
-```
-
-### Run the terminal
-
-```bash
-npm run terminal
-# or directly:
-node packages/terminal/dist/terminal/index.js
-```
-
-You should see the Dark X402 banner and a prompt for wallet / swap / agent commands.
-
----
-
-## Workspace Scripts
-
-| Command | What it does |
-| --- | --- |
-| `npm run build` | Build every package (`--workspaces --if-present`) |
-| `npm run build:sdk` | Build only `@dark-protocol/sdk` (tsc + rollup) |
-| `npm run build:terminal` | Build only the CLI |
-| `npm run terminal` | Launch the CLI in dev mode (ts-node) |
-| `npm run clean` | Remove all `dist/` and `node_modules/` |
-
----
-
-## Using the SDK
+| Module | File | Description |
+| --- | --- | --- |
+| `DarkWallet` | `src/wallet.ts` | Solana keypair + shielding helpers |
+| `SaplingHDWallet` | `src/sapling.ts` | ZIP-32 HD key derivation, 43-byte shielded addresses, diversifiers |
+| `NoteEncryptionUtils` | `src/note-encryption.ts` | ChaCha20-Poly1305 note encryption / decryption |
+| `PrivateSwapManager` | `src/swap.ts` | Jupiter Ultra swap with oracle price validation |
+| `PriceOracle` | `src/oracle.ts` | Multi-source price oracle (Birdeye + Jupiter fallback) |
+| `PrivacyUtils` | `src/privacy.ts` | Ephemeral address helpers, unlinkability utilities |
+| `DarkProtocolClient` | `src/client.ts` | RPC client factory (Helius + fallback) |
+| `DarkSwap` (React) | `src/components/DarkSwap.tsx` | Drop-in React swap widget |
 
 ```typescript
 import {
@@ -163,53 +117,34 @@ const client = await DarkProtocolClient.create({
   useSecureRpc: true,
 });
 
-// 1. Generate a privacy wallet
 const { wallet, mnemonic } = await DarkWallet.generate(client);
-
-// 2. Derive a Sapling shielded wallet from the same mnemonic
 const sapling = await SaplingHDWallet.fromMnemonic(mnemonic);
 const shieldedAddr = sapling.getDefaultAddress().toBase58();
-
-// 3. Shield 1 SOL and run a private SOL → USDC swap with oracle protection
-await wallet.shieldTokens(BigInt(1_000_000_000), PublicKey.default);
-
-const swaps = new PrivateSwapManager(client, {
-  jupiterApiKey: process.env.JUPITER_API_KEY,
-  birdeyeApiKey: process.env.BIRDEYE_API_KEY,
-});
-
-const quote = await swaps.getQuoteWithOracle(
-  new PublicKey(KNOWN_TOKENS.SOL),
-  new PublicKey(KNOWN_TOKENS.USDC),
-  BigInt(10_000_000),
-  50, // 0.5 % slippage
-);
-
-await swaps.executePrivateSwap({
-  inputMint: new PublicKey(KNOWN_TOKENS.SOL),
-  outputMint: new PublicKey(KNOWN_TOKENS.USDC),
-  inputAmount: BigInt(10_000_000),
-  minOutputAmount: quote.outputAmount,
-  slippageBps: 50,
-  userPublicKey: wallet.publicKey,
-  validateWithOracle: true, // reject if oracle deviates >2%
-});
 ```
 
 Full SDK docs: [packages/sdk/README.md](packages/sdk/README.md) · Oracle guide: [packages/sdk/ORACLE_README.md](packages/sdk/ORACLE_README.md).
 
 ---
 
-## Confidential TEE Agents
+### `@dark-protocol/tee-agents` · [packages/tee-agents/](packages/tee-agents/)
 
-`@dark-protocol/tee-agents` turns layer 7 (AI in TEE) into something real and
-on-chain: spawn TEE-attested agents, anchor their identity in the **Solana
-Attestation Service**, pay for **sealed inference** with **x402 private
-payments**, and write paid-inference receipts back on-chain.
+Confidential AI agents running inside Trusted Execution Environments (TEEs), anchored on-chain via the **Solana Attestation Service (SAS)** and paying for sealed inference via **x402**.
 
 ```text
 spawn enclave → verify quote → seal prompt → pay (x402 dark-shielded) → infer → on-chain receipt
 ```
+
+**Implemented:**
+
+| Module | Path | Description |
+| --- | --- | --- |
+| `ConfidentialAgent` | `src/agents/confidential-agent.ts` | Agent lifecycle: spawn, seal, infer |
+| `DarkAttestationService` | `src/attestation/service.ts` | SAS credential / schema / attestation management |
+| `DarkTEEAttestation` | `src/attestation/tee.ts` | SGX/TDX quote parsing and verification |
+| `X402PaymentClient` | `src/payments/x402.ts` | x402 shielded payment flow |
+| `InferenceClient` | `src/inference/` | Provider-agnostic sealed inference |
+| `DARK_SCHEMAS` | `src/attestation/schemas.ts` | `DarkAgentIdentity` + `DarkInferenceReceipt` SAS schemas |
+| CLI | `src/cli.ts` | `dark-tee spawn` / `dark-tee infer` commands |
 
 ```bash
 npm run tee:demo            # offline walkthrough (no keys needed)
@@ -218,7 +153,7 @@ npx dark-tee infer "..."    # one sealed, x402-paid inference
 ```
 
 ```typescript
-import { ConfidentialAgent, PAYMENT_ASSETS, DarkAttestationService, DARK_SCHEMAS } from '@dark-protocol/tee-agents';
+import { ConfidentialAgent, DarkAttestationService, DARK_SCHEMAS } from '@dark-protocol/tee-agents';
 
 const agent = ConfidentialAgent.spawn({
   agentId: 'dark-analyst-01',
@@ -227,27 +162,127 @@ const agent = ConfidentialAgent.spawn({
   network: 'solana-devnet',
 });
 
-// Anchor the attested identity on Solana via SAS (needs a funded signer):
 const sas = DarkAttestationService.fromNetwork('devnet', process.env.HELIUS_API_KEY);
-await sas.attest({ payer, authority, credential, schema, nonce: agent.attestationNonce,
-  data: agent.identityData(), expiryUnixSeconds: /* … */ 0 });
+await sas.createCredential({ payer, authority, authorizedSigners: [authority.address] });
+await sas.createSchema({ payer, authority, credential, def: DARK_SCHEMAS.agentIdentity });
 ```
 
 Details: [packages/tee-agents/README.md](packages/tee-agents/README.md) · Guide: [docs/TEE_AGENTS.md](docs/TEE_AGENTS.md).
 
-The SAS program + client come from the `x402agent/solana-clawd` attestation
-workspace and are consumed via the published `sas-lib` client.
+---
+
+### `sas-lib` · [packages/sas-lib/](packages/sas-lib/)
+
+Local workspace package — the **Solana Attestation Service** TypeScript client, adapted for Dark DeFi. This is the canonical source for all SAS interactions; it is symlinked in `node_modules/sas-lib` so existing imports require no changes.
+
+Sourced from the Solana Foundation's [SAS attestation workspace](https://github.com/solana-foundation/solana-attestation-service) and extended with:
+
+| Extension | File | Description |
+| --- | --- | --- |
+| Program addresses | `src/dark/programs.ts` | All Dark protocol + SAS program IDs |
+| Dark schemas | `src/dark/schemas.ts` | Agent identity, inference receipt, agent router schemas |
+| `AgentRegistry` | `src/dark/registry.ts` | On-chain + demo-mode agent registration |
+| Inference helpers | `src/dark/inference.ts` | Hash prompt/response, record inference attestation |
+
+```typescript
+// SAS core (generated client)
+import { deriveAttestationPda, getCreateAttestationInstruction } from 'sas-lib';
+
+// Dark extensions
+import { DARK_SCHEMAS, AgentRegistry, recordInferenceAttestation, SAS_PROGRAM_ID } from 'sas-lib';
+```
+
+**SAS Program ID:** `22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG`
 
 ---
 
-## Programs (Solana Devnet)
+### `@dark-protocol/core` (protocol) · [packages/protocol/](packages/protocol/)
 
-| Program | Address |
+Low-level TypeScript protocol client used by the SDK. Provides direct Anchor program bindings, AI agent manager, and cross-chain bridge stubs.
+
+| Module | File |
 | --- | --- |
-| Dark Protocol | `3KWLFYco7T2rUZkzjSSthjHGmbWmo9HAsRmvupDTomGC` |
-| Shielded Wallet | `4753b1cCrPzwr7taWWD8yrcM8dc98fTR7wCFdv1TsAbg` |
+| `DarkProtocolClient` | `client.ts` |
+| `AIAgentManager` | `ai-agent.ts` |
+| Config / program IDs | `config.ts` |
+| Sapling primitives | `sapling.ts` |
+| Note encryption | `note-encryption.ts` |
+| Privacy utilities | `privacy.ts` |
+| Swap routing | `swap.ts` |
 
-[View on Solana Explorer →](https://explorer.solana.com/address/3KWLFYco7T2rUZkzjSSthjHGmbWmo9HAsRmvupDTomGC?cluster=devnet)
+---
+
+### `dark-x402-terminal` · [packages/terminal/](packages/terminal/)
+
+Interactive CLI terminal with a cyberpunk UI. Runs in both Node.js (terminal) and browser (via web shell).
+
+```bash
+npm run terminal         # start interactive CLI (ts-node dev mode)
+npm run build:terminal   # compile to dist/
+node packages/terminal/dist/terminal/index.js
+```
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js **≥ 18**
+- A [Helius](https://helius.xyz) API key (required for RPC)
+- Optional: Jupiter, Birdeye, Google AI, RedPill API keys
+
+### Install & build
+
+```bash
+git clone https://github.com/8bitsats/darkterminal.git
+cd darkterminal
+npm install          # installs all workspaces (including local sas-lib)
+npm run build        # builds sdk → sas-lib → tee-agents → terminal
+```
+
+### Configure secrets
+
+```bash
+cp .env.example .secrets/.env
+# Add at minimum: HELIUS_API_KEY
+ln -sf ../../.secrets/.env packages/terminal/.env
+```
+
+### Run
+
+```bash
+npm run terminal                         # interactive CLI
+npm run tee:demo                         # TEE agent demo (no keys needed)
+node packages/tee-agents/dist/demo.js   # direct demo runner
+```
+
+---
+
+## Workspace Scripts
+
+| Command | What it does |
+| --- | --- |
+| `npm run build` | Build every package in dependency order |
+| `npm run build:sas` | Build only `sas-lib` |
+| `npm run build:sdk` | Build only `@dark-protocol/sdk` |
+| `npm run build:tee` | Build only `@dark-protocol/tee-agents` |
+| `npm run build:terminal` | Build only the CLI |
+| `npm run terminal` | Launch the CLI in dev mode (ts-node) |
+| `npm run tee:demo` | Run TEE agent offline demo |
+| `npm run clean` | Remove all `dist/` and `node_modules/` |
+
+---
+
+## On-chain Programs (Solana)
+
+| Program | Address | Status |
+| --- | --- | --- |
+| **Solana Attestation Service** | `22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG` | ✅ Deployed (Solana Foundation) |
+| **Dark Protocol** | `3KWLFYco7T2rUZkzjSSthjHGmbWmo9HAsRmvupDTomGC` | ⚠️ Placeholder (devnet, unaudited) |
+| **Shielded Wallet** | `4753b1cCrPzwr7taWWD8yrcM8dc98fTR7wCFdv1TsAbg` | ⚠️ Placeholder (devnet, unaudited) |
+
+> **Note:** The Dark Protocol and Shielded Wallet program IDs are configuration placeholders — the Rust programs are not yet part of this repository. All on-chain privacy operations currently route through the SAS program for attestation. The Zcash Sapling cryptography is implemented in TypeScript (SDK) and is suitable for development and demos; production use requires a formal security audit.
 
 ---
 
@@ -255,27 +290,52 @@ workspace and are consumed via the published `sas-lib` client.
 
 This is **alpha software**. Do not use it on mainnet with real funds without an audit.
 
-- ✅ Sapling key derivation, note encryption, ZIP-32, HD wallets — implemented and unit-testable
-- ✅ Multi-source price oracle, slippage validation, Jupiter Ultra integration
-- ✅ Terminal builds, runs, connects to Helius
-- ⚠️ ZK-SNARK circuits are placeholders — not production proofs
-- ⚠️ Threshold ElGamal moved off-chain due to BPF stack limits
-- ⚠️ TEE attestation surface is wired but not hardened
-- ⚠️ Smart contracts are unaudited
+| Component | Status |
+| --- | --- |
+| Sapling key derivation (ZIP-32), HD wallets | ✅ TypeScript — implemented, unit-testable |
+| Note encryption (ChaCha20-Poly1305) | ✅ TypeScript — implemented |
+| Multi-source price oracle + slippage validation | ✅ Implemented |
+| Jupiter Ultra swap integration | ✅ Implemented |
+| Terminal CLI — builds, runs, connects to Helius | ✅ Working |
+| TEE agent: spawn, attest (SAS), pay (x402), infer | ✅ Implemented (demo + live modes) |
+| Solana Attestation Service client (`sas-lib`) | ✅ Local workspace, built from SAS source |
+| ZK-SNARK circuits | ⚠️ Placeholder — not production proofs |
+| Threshold ElGamal (on-chain) | ⚠️ Moved off-chain due to BPF stack limits |
+| Rust on-chain Zcash programs | 📋 Not yet implemented (TypeScript SDK only) |
+| TEE attestation hardening | ⚠️ Wired, not hardened |
+| Smart contracts | ⚠️ Unaudited |
 
-If you find a security issue, **do not open a public issue** — email security disclosures privately first.
+---
+
+## The Seven Layers (from `docs/DARK_DEFI_VISION.md`)
+
+1. **Cryptographic foundation** — Sapling/Orchard primitives, Pedersen commitments, nullifiers, BLAKE2b PRFs, ZIP-32 HD keys.
+2. **Dark pools** — Encrypted constant-product AMMs and FHE order matchers; Jupiter V6 for price discovery.
+3. **eAsset wrapping** — `eSOL`, `eBTC`, `eETH`, `eUSDC` — tokens with encrypted balances.
+4. **Fully Homomorphic Encryption** — `Swap(E(amount), E(price)) = E(output)` so swap math runs on ciphertext.
+5. **Threshold ElGamal** — Distributed-trust key custody; t-of-n decryption for compliant view-key sharing.
+6. **Ephemeral accounts** — Single-use addresses break transaction-graph linkability.
+7. **AI agents in TEE** — Gemini-driven analysis and execution with attested measurement anchored in SAS.
 
 ---
 
 ## Documentation Map
 
-- [`docs/DARK_DEFI_VISION.md`](docs/DARK_DEFI_VISION.md) — full protocol vision, all seven layers
-- [`docs/DARK_X402_TERMINAL.md`](docs/DARK_X402_TERMINAL.md) — terminal feature tour
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — technical architecture
-- [`docs/SHIELDED_WALLET_GUIDE.md`](docs/SHIELDED_WALLET_GUIDE.md) — shielded wallet walkthrough
-- [`docs/CROSS_CHAIN_BRIDGE_GUIDE.md`](docs/CROSS_CHAIN_BRIDGE_GUIDE.md) — bridging in/out
-- [`docs/HELIUS_INTEGRATION.md`](docs/HELIUS_INTEGRATION.md) — RPC/DAS setup
-- [`docs/TESTING_GUIDE.md`](docs/TESTING_GUIDE.md) — how to verify a build
+| Doc | What it covers |
+| --- | --- |
+| [`docs/DARK_DEFI_VISION.md`](docs/DARK_DEFI_VISION.md) | Full protocol vision, all seven layers |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Technical architecture |
+| [`docs/TEE_AGENTS.md`](docs/TEE_AGENTS.md) | TEE agent setup, SAS attestation, x402 payments |
+| [`docs/SHIELDED_WALLET_GUIDE.md`](docs/SHIELDED_WALLET_GUIDE.md) | TypeScript shielded wallet walkthrough |
+| [`docs/SDK_INTEGRATION.md`](docs/SDK_INTEGRATION.md) | SDK usage guide |
+| [`docs/ORACLE_INTEGRATION_GUIDE.md`](docs/ORACLE_INTEGRATION_GUIDE.md) | Oracle and slippage protection |
+| [`docs/DARK_X402_TERMINAL.md`](docs/DARK_X402_TERMINAL.md) | Terminal feature tour |
+| [`docs/HELIUS_INTEGRATION.md`](docs/HELIUS_INTEGRATION.md) | RPC/DAS setup |
+| [`docs/CROSS_CHAIN_BRIDGE_GUIDE.md`](docs/CROSS_CHAIN_BRIDGE_GUIDE.md) | Bridging in/out (roadmap) |
+| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Build and deployment guide |
+| [`docs/TESTING_GUIDE.md`](docs/TESTING_GUIDE.md) | How to verify a build |
+| [`docs/ZCASH_INTEGRATION.md`](docs/ZCASH_INTEGRATION.md) | Zcash Sapling TypeScript port details |
+| [`docs/XAI_INTEGRATION.md`](docs/XAI_INTEGRATION.md) | xAI/Grok API integration notes |
 
 ---
 
@@ -284,8 +344,10 @@ If you find a security issue, **do not open a public issue** — email security 
 1. Fork the repo
 2. `git checkout -b feat/your-feature`
 3. `npm install && npm run build`
-4. Commit with a meaningful message (we squash on merge — no `;;`, `ff`, or `ksss`)
+4. Commit with a meaningful message
 5. Open a PR against `main`
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
 
 ---
 
@@ -298,10 +360,11 @@ If you find a security issue, **do not open a public issue** — email security 
 ## Acknowledgments
 
 - **Zcash Foundation** & **Electric Coin Company** — Sapling protocol design and reference implementation
+- **Solana Foundation** — Solana Attestation Service program and TypeScript client
 - **Solana Labs** — high-throughput L1
 - **Helius** — RPC and DAS infrastructure
 - **Jupiter** — swap aggregation and Ultra API
-- **Anchor** — Solana program framework
+- **Phala Network** — TEE infrastructure for confidential compute
 
 ---
 

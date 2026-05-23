@@ -60,9 +60,13 @@ writing requires a funded signer and an RPC endpoint.
 
 SAS program: `22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG`.
 
-The SAS program, IDL, and TypeScript client originate from the
+The SAS program, IDL, and generated TypeScript client originate from the
 `x402agent/solana-clawd` attestation workspace (the OpenClawd verification
-layer) and are consumed here via the published `sas-lib` client.
+layer). They are included in this repo as the **local `sas-lib` workspace**
+(`packages/sas-lib/`) with Dark-specific schema extensions layered on top
+(`src/dark/`). `node_modules/sas-lib` is a symlink to that local package, so
+no npm registry round-trip is needed and local changes are reflected
+immediately on the next build.
 
 ## x402 private payments
 

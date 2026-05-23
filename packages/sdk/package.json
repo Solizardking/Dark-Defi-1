@@ -1,6 +1,6 @@
 {
   "name": "@openclawdsol/dark-protocol-sdk",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Dark Protocol SDK - Privacy-first wallet with AI agents, price oracles, and Jupiter Ultra API for Solana",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

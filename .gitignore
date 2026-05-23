@@ -11,7 +11,7 @@ client_secret_*.json
 x402-*.json
 *-keypair.json
 id.json
-
+.npm
 # Build outputs
 dist/
 build/

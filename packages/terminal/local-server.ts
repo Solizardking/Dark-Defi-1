@@ -16,6 +16,14 @@ import * as path from 'path';
 import * as https from 'https';
 import * as dotenv from 'dotenv';
 import { IncomingMessage, ServerResponse } from 'http';
+import {
+  getTicker,
+  getAllTickers,
+  getOrderbook,
+  getCandles,
+  getExchangeSnapshot,
+  getMarketList,
+} from './phoenix-perps';
 
 // ──────────────────────────────────────────────
 // Load .env from the terminal package directory

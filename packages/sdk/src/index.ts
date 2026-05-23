@@ -47,5 +47,26 @@ export * from './note-encryption';
 // Configuration
 export * from './config';
 
+// Shielded Wallet — full note lifecycle (deposit, transfer, balance, proofs)
+export {
+  ShieldedWallet,
+  ViewOnlyWallet,
+  MultisigShieldedWallet,
+  CommitmentTree,
+  NullifierSet,
+  SHIELDED_WALLET_PROGRAM_ID,
+} from './shielded-wallet';
+export type {
+  ShieldedNote,
+  ShieldedBalance,
+  ShieldedWalletConfig,
+  ShieldedNetwork,
+  ViewingKeyExport,
+  PaymentProof,
+  DepositResult,
+  TransferResult,
+  MultisigProposal,
+} from './shielded-wallet';
+
 // Version
-export const VERSION = '0.2.0'; // Updated for Zcash Sapling integration
+export const VERSION = '0.3.0'; // ShieldedWallet — note lifecycle complete

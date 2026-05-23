@@ -11,7 +11,11 @@
     "build:protocol": "npm run build -w @dark-protocol/sdk --if-present || tsc -p packages/protocol",
     "build:sdk": "npm run build -w @dark-protocol/sdk",
     "build:terminal": "npm run build -w dark-x402-terminal",
+    "build:tee": "npm run build -w @dark-protocol/tee-agents",
     "terminal": "npm run dev -w dark-x402-terminal",
+    "tee": "node packages/tee-agents/dist/cli.js",
+    "tee:demo": "npm run build:tee && node packages/tee-agents/dist/demo.js",
+    "install:dark": "bash scripts/install-dark.sh",
     "clean": "rm -rf packages/*/dist packages/*/node_modules node_modules"
   },
   "devDependencies": {

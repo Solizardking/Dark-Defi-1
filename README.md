@@ -77,6 +77,7 @@ dark-defi-terminal/
 ├── packages/
 │   ├── protocol/            # @dark-protocol/core — protocol client, AI agent mgr, sapling
 │   ├── sdk/                 # @dark-protocol/sdk — TypeScript SDK with React components
+│   ├── tee-agents/          # @dark-protocol/tee-agents — confidential AI agents, SAS attestation, x402
 │   ├── terminal/            # dark-x402-terminal — interactive CLI + web shell
 │   └── tradingview-example/ # Reference TradingView charting integration
 ├── docs/                    # Architecture, integration guides, deployment notes
@@ -103,7 +104,13 @@ dark-defi-terminal/
 git clone https://github.com/8bitsats/darkterminal.git
 cd darkterminal
 npm install                 # installs all workspaces
-npm run build               # builds protocol, sdk, terminal
+npm run build               # builds sdk, tee-agents, terminal
+```
+
+Or use the animated one-shot installer (installs, builds, scaffolds secrets):
+
+```bash
+npm run install:dark        # or: ./scripts/install-dark.sh --demo
 ```
 
 ### Configure secrets
@@ -190,6 +197,46 @@ await swaps.executePrivateSwap({
 ```
 
 Full SDK docs: [packages/sdk/README.md](packages/sdk/README.md) · Oracle guide: [packages/sdk/ORACLE_README.md](packages/sdk/ORACLE_README.md).
+
+---
+
+## Confidential TEE Agents
+
+`@dark-protocol/tee-agents` turns layer 7 (AI in TEE) into something real and
+on-chain: spawn TEE-attested agents, anchor their identity in the **Solana
+Attestation Service**, pay for **sealed inference** with **x402 private
+payments**, and write paid-inference receipts back on-chain.
+
+```text
+spawn enclave → verify quote → seal prompt → pay (x402 dark-shielded) → infer → on-chain receipt
+```
+
+```bash
+npm run tee:demo            # offline walkthrough (no keys needed)
+npx dark-tee spawn          # spawn an agent + derive its SAS addresses
+npx dark-tee infer "..."    # one sealed, x402-paid inference
+```
+
+```typescript
+import { ConfidentialAgent, PAYMENT_ASSETS, DarkAttestationService, DARK_SCHEMAS } from '@dark-protocol/tee-agents';
+
+const agent = ConfidentialAgent.spawn({
+  agentId: 'dark-analyst-01',
+  owner: ownerAddress,
+  model: 'phala/deepseek-r1-70b-tee',
+  network: 'solana-devnet',
+});
+
+// Anchor the attested identity on Solana via SAS (needs a funded signer):
+const sas = DarkAttestationService.fromNetwork('devnet', process.env.HELIUS_API_KEY);
+await sas.attest({ payer, authority, credential, schema, nonce: agent.attestationNonce,
+  data: agent.identityData(), expiryUnixSeconds: /* … */ 0 });
+```
+
+Details: [packages/tee-agents/README.md](packages/tee-agents/README.md) · Guide: [docs/TEE_AGENTS.md](docs/TEE_AGENTS.md).
+
+The SAS program + client come from the `x402agent/solana-clawd` attestation
+workspace and are consumed via the published `sas-lib` client.
 
 ---
 

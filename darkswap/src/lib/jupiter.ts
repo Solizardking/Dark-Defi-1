@@ -1,6 +1,16 @@
 import type { SwapQuote } from "@/types";
 
-const JUP_API = "https://quote-api.jup.ag/v6";
+const JUP_API =
+  process.env.JUPITER_ENDPOINT
+    ? `${process.env.JUPITER_ENDPOINT}/v6`
+    : "https://quote-api.jup.ag/v6";
+
+function jupHeaders(): HeadersInit {
+  const h: HeadersInit = { "Content-Type": "application/json" };
+  const key = process.env.JUPITER_API_KEY ?? process.env.JUP_SWAP_V1_API_KEY;
+  if (key) h["x-api-key"] = key;
+  return h;
+}
 
 export async function getJupiterQuote(
   inputMint: string,
@@ -18,7 +28,7 @@ export async function getJupiterQuote(
   });
 
   const res = await fetch(`${JUP_API}/quote?${params}`, {
-    headers: { "Content-Type": "application/json" },
+    headers: jupHeaders(),
     next: { revalidate: 0 },
   });
 
@@ -50,7 +60,7 @@ export async function getJupiterSwapTransaction(
 
   const res = await fetch(`${JUP_API}/swap`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: jupHeaders(),
     body: JSON.stringify(body),
   });
 

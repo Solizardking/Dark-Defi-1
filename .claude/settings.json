@@ -1,0 +1,53 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(solana program *)",
+      "Bash(mkdir -p packages)",
+      "Bash(git mv *)",
+      "Bash(rmdir sdk *)",
+      "Bash(diff ARCHITECTURE.md docs/ARCHITECTURE.md)",
+      "Bash(echo \"ARCHITECTURE diff: $?\")",
+      "Bash(awk '{print $1}')",
+      "Bash(npm ls *)",
+      "Bash(mkdir -p /Users/8bit/bots/Cladwbot-solana/solana-clawd/openclawd-framework/Dark-Defi/packages/sas-lib/src *)",
+      "Bash(solana --version)",
+      "Bash(anchor --version)",
+      "Bash(npm --version)",
+      "Bash(npm whoami *)",
+      "Bash(solana config *)",
+      "Bash(git ls-files *)",
+      "Bash(solana-keygen pubkey *)",
+      "Bash(solana airdrop *)",
+      "Bash(node -e \"console.log\\('node ok'\\)\")",
+      "Bash(anchor init *)",
+      "Bash(echo \"tsc exit: $?\")",
+      "Bash(npm org *)",
+      "Bash(npm team *)",
+      "Bash(curl -s https://registry.npmjs.org/-/org/dark-protocol/package)",
+      "Bash(curl -s \"https://registry.npmjs.org/-/v1/search?text=maintainer:openclawdsol&size=5\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(p['package']['name']\\) for p in d.get\\('objects',[]\\)]\")",
+      "Bash(anchor build *)",
+      "Bash(curl -X PUT https://registry.npmjs.org/-/org/dark-protocol -H 'Authorization: Bearer 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' -H 'Content-Type: application/json' -d '{\"name\":\"dark-protocol\",\"size\":\"free\"}')",
+      "Bash(curl -s \"https://registry.npmjs.org/@dark-protocol\")",
+      "Bash(curl -s \"https://registry.npmjs.org/-/user/org.couchdb.user:dark-protocol\")",
+      "Bash(curl -s \"https://registry.npmjs.org/@openclawdsolana/clawd-code-cli\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('maintainers:', [m['name'] for m in d.get\\('maintainers',[]\\)]\\)\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\([k for k in d.get\\('exports',{}\\).keys\\(\\)][:20]\\)\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('publishConfig:', d.get\\('publishConfig',{}\\)\\); print\\('private:', d.get\\('private', 'not set'\\)\\)\")",
+      "Bash(curl -X POST https://www.npmjs.com/org -H 'Authorization: Bearer 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' -H 'Content-Type: application/json' -d '{\"scope\":\"dark-protocol\",\"description\":\"Dark Protocol DeFi Privacy Layer\"}')",
+      "Bash(curl -X PUT https://registry.npmjs.org/-/org -H 'Authorization: Bearer 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' -H 'Content-Type: application/json' -d '{\"name\":\"dark-protocol\"}')",
+      "Bash(curl -s \"https://www.npmjs.com/~dark-protocol\" -I)",
+      "Bash(export NPM_CONFIG_USERCONFIG=/tmp/dark-defi-publish.npmrc)",
+      "Bash(npm view *)",
+      "Bash(curl -X PUT https://registry.npmjs.org/-/org/dark-protocol -H 'Authorization: Bearer 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' -H 'Content-Type: application/json' -H 'npm-command: org' -d '{\"name\":\"dark-protocol\",\"description\":\"Dark Protocol DeFi Privacy Layer on Solana\"}')",
+      "Bash(curl -X PUT https://api.npmjs.com/orgs -H 'Authorization: Bearer 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' -H 'Content-Type: application/json' -d '{\"name\":\"dark-protocol\"}')",
+      "Bash(npm profile *)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('version:', d.get\\('version'\\)\\)\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('main:', d.get\\('main'\\)\\); print\\('types:', d.get\\('types'\\)\\)\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('version:', d.get\\('version'\\)\\); exps = d.get\\('exports',{}\\); keys = list\\(exps.keys\\(\\)\\)[:20]; print\\('exports:', keys\\)\")"
+    ],
+    "additionalDirectories": [
+      "/Users/8bit/bots/Cladwbot-solana/solana-clawd/openclawd-framework/Dark-Defi/packages/sas-lib-src-tmp"
+    ]
+  }
+}

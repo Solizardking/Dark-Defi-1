@@ -1,6 +1,6 @@
 # Dependencies
 node_modules/
-
+magicblock-engine-examples-main
 # Secrets & credentials — NEVER commit these
 .secrets/
 .env

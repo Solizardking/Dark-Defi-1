@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { Layers, ArrowUpDown, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 
 interface EphemeralBalance {
@@ -22,11 +22,8 @@ export function EphemeralPanel({ enabled, onToggle, balances, onRefresh, tokenSy
 
   return (
     <div className="glass rounded-xl overflow-hidden" style={{ border: "1px solid rgba(168,85,247,0.2)" }}>
-      <button
-        className="w-full flex items-center justify-between p-3 hover:bg-white/5 transition-colors"
-        onClick={() => setExpanded(!expanded)}
-      >
-        <div className="flex items-center gap-2">
+      <div className="w-full flex items-center justify-between p-3">
+        <div className="flex items-center gap-2 flex-1">
           <Layers size={13} className="text-purple-400" />
           <span className="text-xs font-semibold text-purple-400 tracking-wider">EPHEMERAL LAYER</span>
           <span className="text-xs px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-400 border border-purple-500/20">
@@ -35,7 +32,8 @@ export function EphemeralPanel({ enabled, onToggle, balances, onRefresh, tokenSy
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={(e) => { e.stopPropagation(); onToggle(); }}
+            type="button"
+            onClick={onToggle}
             className={`text-xs px-2.5 py-1 rounded-lg transition-all font-mono border ${
               enabled
                 ? "bg-purple-500/15 text-purple-400 border-purple-500/30 hover:border-purple-500/50"
@@ -44,9 +42,16 @@ export function EphemeralPanel({ enabled, onToggle, balances, onRefresh, tokenSy
           >
             {enabled ? "ON" : "OFF"}
           </button>
-          {expanded ? <ChevronUp size={13} className="text-slate-500" /> : <ChevronDown size={13} className="text-slate-500" />}
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="p-0.5 text-slate-500 hover:text-slate-300 transition-colors"
+            aria-label={expanded ? "Collapse" : "Expand"}
+          >
+            {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+          </button>
         </div>
-      </button>
+      </div>
 
       {expanded && (
         <div className="px-3 pb-3 pt-0 border-t border-white/5 space-y-3">

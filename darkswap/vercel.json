@@ -1,9 +1,7 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
   "framework": "nextjs",
-  "env": {
-    "NEXT_PUBLIC_PROGRAM_ID": "E8zL7h9qHjC7sMf2WCYhdqS5iLkYhPJ9yAhTfevo74jm",
-    "NEXT_PUBLIC_NETWORK": "mainnet-beta"
-  }
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install --legacy-peer-deps",
+  "outputDirectory": ".next"
 }

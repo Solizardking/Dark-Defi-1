@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { getJupiterQuote } from "@/lib/jupiter";
 import { getDflowQuote } from "@/lib/dflow";
 import { validateOraclePrice } from "@/lib/oracle";
@@ -6,15 +6,15 @@ import { checkTokenSafety } from "@/lib/safety";
 import type { SwapQuote } from "@/types";
 
 function makeMockQuote(inputMint: string, outputMint: string, amount: string, slippageBps: number): SwapQuote {
-  const inAmt = BigInt(amount);
-  const outAmt = (inAmt * 14250n) / 100n;
-  const minOut = (outAmt * BigInt(10000 - slippageBps)) / 10000n;
+  const inAmt = Number(amount);
+  const outAmt = Math.floor(inAmt * 142.5);
+  const minOut = Math.floor(outAmt * (10000 - slippageBps) / 10000);
   return {
     inputMint,
     inAmount: amount,
     outputMint,
-    outAmount: outAmt.toString(),
-    otherAmountThreshold: minOut.toString(),
+    outAmount: String(outAmt),
+    otherAmountThreshold: String(minOut),
     swapMode: "ExactIn",
     slippageBps,
     priceImpactPct: "0.123",
@@ -25,7 +25,7 @@ function makeMockQuote(inputMint: string, outputMint: string, amount: string, sl
         inputMint,
         outputMint,
         inAmount: amount,
-        outAmount: outAmt.toString(),
+        outAmount: String(outAmt),
         feeAmount: "200",
         feeMint: inputMint,
       },
@@ -40,7 +40,7 @@ function pickBest(
 ): { quote: SwapQuote; source: string } | null {
   if (!dflow && !jup) return null;
   if (dflow && jup) {
-    return BigInt(dflow.outAmount) >= BigInt(jup.outAmount)
+    return Number(dflow.outAmount) >= Number(jup.outAmount)
       ? { quote: dflow, source: "dflow" }
       : { quote: jup, source: "jupiter" };
   }

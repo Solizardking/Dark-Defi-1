@@ -1,3 +1,54 @@
 {
-  "type": "commonjs"
+  "name": "@dark-protocol/protocol",
+  "version": "0.2.0",
+  "description": "Dark Protocol — on-chain types, interfaces, and program ABIs for the Dark DeFi privacy layer on Solana",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "commonjs",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "solana",
+    "privacy",
+    "zero-knowledge",
+    "zcash",
+    "sapling",
+    "dark-protocol",
+    "defi",
+    "shielded",
+    "wallet"
+  ],
+  "author": "Dark Protocol Team",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.30.0",
+    "@noble/ciphers": "^0.4.1",
+    "@noble/hashes": "^1.3.3",
+    "@solana/web3.js": "^1.91.0",
+    "bip32": "^4.0.0",
+    "bip39": "^3.1.0",
+    "bs58": "^5.0.0",
+    "tweetnacl": "^1.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

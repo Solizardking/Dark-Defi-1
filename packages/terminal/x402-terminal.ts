@@ -14,7 +14,7 @@ import {
   DarkProtocolClient,
   DarkWallet,
   PrivateSwapManager,
-} from '../protocol';
+} from '../protocol/index';
 import { DarkSwapUI } from './dark-swap-ui';
 import { DarkWalletManager } from './dark-wallet-manager';
 import { GoogleGenAIAgent } from './google-ai-agent';

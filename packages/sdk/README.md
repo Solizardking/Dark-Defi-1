@@ -430,11 +430,11 @@ const SHIELDED_WALLET_PROGRAM_ID = '4753b1cCrPzwr7taWWD8yrcM8dc98fTR7wCFdv1TsAbg
 ```typescript
 // Devnet (Helius)
 const DEVNET_RPC = 'https://devnet.helius-rpc.com/?api-key=YOUR_KEY';
-const DEVNET_SECURE = 'https://cati-etnoqa-fast-devnet.helius-rpc.com';
+const DEVNET_SECURE = 'https://your-devnet-staked-endpoint.helius-rpc.com';
 
 // Mainnet (Helius)
 const MAINNET_RPC = 'https://mainnet.helius-rpc.com/?api-key=YOUR_KEY';
-const MAINNET_SECURE = 'https://alli-pigt1b-fast-mainnet.helius-rpc.com';
+const MAINNET_SECURE = 'https://your-mainnet-staked-endpoint.helius-rpc.com';
 ```
 
 ---

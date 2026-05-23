@@ -28,7 +28,7 @@ export const NETWORK_CONFIGS: Record<string, RPCConfig> = {
     rpc: process.env.HELIUS_RPC_URL ||
           `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY || ''}`,
     secureRpc: process.env.HELIUS_SECURE_RPC_URL ||
-               'https://alli-pigt1b-fast-mainnet.helius-rpc.com',
+               `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY || ''}`,
     wss: process.env.HELIUS_WSS_URL ||
          `wss://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY || ''}`,
   },
@@ -40,7 +40,7 @@ export const NETWORK_CONFIGS: Record<string, RPCConfig> = {
     rpc: process.env.HELIUS_DEVNET_URL ||
          `https://devnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY || ''}`,
     secureRpc: process.env.HELIUS_SECURE_DEVNET_URL ||
-               'https://cati-etnoqa-fast-devnet.helius-rpc.com',
+               `https://devnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY || ''}`,
     wss: process.env.HELIUS_DEVNET_WSS_URL ||
          `wss://devnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY || ''}`,
   },

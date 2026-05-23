@@ -13,7 +13,7 @@
 - **Program ID:** `Frf98UwzjLqiFUTNVY8kEdZsUW3xCuuSm8MSayBSmk4X`
 - **Transaction Signature:** `SBJm4nRwSybDVD8WpYhp3s8jJmTxtHtxQG8eXmQWvA7TVnFpWSfRjRPNLfsq4qPPoRHMdexHPYfD5d1VFJXUNDg`
 - **Program Size:** 334 KB
-- **RPC Endpoint:** Helius Secure Devnet (`https://cati-etnoqa-fast-devnet.helius-rpc.com`)
+- **RPC Endpoint:** Helius Secure Devnet (`https://your-devnet-staked-endpoint.helius-rpc.com`)
 - **Deployment Transactions:** 338 total
 
 ---

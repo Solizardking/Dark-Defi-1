@@ -14,7 +14,7 @@ import WebSocket from 'ws';
 import { EventEmitter } from 'events';
 
 // Configuration from .env
-const BIRDEYE_API_KEY = process.env.BIRDEYE_API_KEY || '16db9dc5f89b4d3eb1c8bd055399ae5a';
+const BIRDEYE_API_KEY = process.env.BIRDEYE_API_KEY || '';
 const X402_TOKEN_ADDRESS = process.env.TOKEN_ADDRESS || '6H8uyJYrPVcra6Fi7iWh29DXSm8KctzhHRyXmPwKpump';
 const BIRDEYE_WS_URL = 'wss://public-api.birdeye.so/socket/solana';
 

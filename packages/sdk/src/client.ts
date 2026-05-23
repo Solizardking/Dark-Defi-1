@@ -42,13 +42,14 @@ export class DarkProtocolClient {
       const network = config.network || 'mainnet';
       const useSecure = config.useSecureRpc || false;
 
+      const secureRpcUrl = process.env.HELIUS_SECURE_RPC_URL;
       if (network === 'devnet') {
-        rpcUrl = useSecure
-          ? 'https://cati-etnoqa-fast-devnet.helius-rpc.com'
+        rpcUrl = useSecure && secureRpcUrl
+          ? secureRpcUrl
           : `https://devnet.helius-rpc.com/?api-key=${config.heliusApiKey}`;
       } else if (network === 'mainnet') {
-        rpcUrl = useSecure
-          ? 'https://alli-pigt1b-fast-mainnet.helius-rpc.com'
+        rpcUrl = useSecure && secureRpcUrl
+          ? secureRpcUrl
           : `https://mainnet.helius-rpc.com/?api-key=${config.heliusApiKey}`;
       } else {
         rpcUrl = 'http://localhost:8899';

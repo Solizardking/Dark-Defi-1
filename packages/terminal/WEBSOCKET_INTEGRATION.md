@@ -399,7 +399,7 @@ const mainMenuChoices = [
 
 1. Check API key in `.env`:
    ```bash
-   BIRDEYE_API_KEY=16db9dc5f89b4d3eb1c8bd055399ae5a
+   BIRDEYE_API_KEY=your_birdeye_api_key
    ```
 
 2. Test connection manually:

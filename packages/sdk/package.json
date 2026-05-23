@@ -37,7 +37,6 @@
     "bs58": "^5.0.0",
     "buffer": "^6.0.3",
     "eventemitter3": "^5.0.1",
-    "helius-sdk": "file:../../../helius-sdk-main",
     "tweetnacl": "^1.0.3"
   },
   "peerDependencies": {

@@ -13,12 +13,12 @@ All Helius RPC endpoints are configured in [`.env`](.env):
 ```bash
 # Mainnet Endpoints
 HELIUS_RPC_URL=https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
-HELIUS_SECURE_RPC_URL=https://alli-pigt1b-fast-mainnet.helius-rpc.com
+HELIUS_SECURE_RPC_URL=https://your-mainnet-staked-endpoint.helius-rpc.com
 HELIUS_WSS_URL=wss://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
 
 # Devnet Endpoints
 HELIUS_DEVNET_URL=https://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
-HELIUS_SECURE_DEVNET_URL=https://cati-etnoqa-fast-devnet.helius-rpc.com
+HELIUS_SECURE_DEVNET_URL=https://your-devnet-staked-endpoint.helius-rpc.com
 HELIUS_DEVNET_WSS_URL=wss://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
 ```
 
@@ -31,13 +31,13 @@ Updated [`Anchor.toml`](Anchor.toml) with secure RPC providers:
 cluster = "https://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY"
 
 [provider.devnet-secure]
-cluster = "https://cati-etnoqa-fast-devnet.helius-rpc.com"
+cluster = "https://your-devnet-staked-endpoint.helius-rpc.com"
 
 [provider.mainnet]
 cluster = "https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY"
 
 [provider.mainnet-secure]
-cluster = "https://alli-pigt1b-fast-mainnet.helius-rpc.com"
+cluster = "https://your-mainnet-staked-endpoint.helius-rpc.com"
 ```
 
 ### 3. ✅ Deployment Scripts
@@ -106,9 +106,9 @@ Updated [`DEPLOYMENT.md`](DEPLOYMENT.md) with:
 | Network | Type | Endpoint | Use Case |
 |---------|------|----------|----------|
 | **Devnet** | Standard | `devnet.helius-rpc.com` | Testing, development |
-| **Devnet** | Secure | `cati-etnoqa-fast-devnet.helius-rpc.com` | Production testing |
+| **Devnet** | Secure | `your-devnet-staked-endpoint.helius-rpc.com` | Production testing |
 | **Mainnet** | Standard | `mainnet.helius-rpc.com` | Basic production |
-| **Mainnet** | Secure | `alli-pigt1b-fast-mainnet.helius-rpc.com` | Production (recommended) |
+| **Mainnet** | Secure | `your-mainnet-staked-endpoint.helius-rpc.com` | Production (recommended) |
 
 ## Secure RPC Benefits
 
@@ -215,7 +215,7 @@ curl "https://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY" \
   -d '{"jsonrpc":"2.0","id":1,"method":"getHealth"}'
 
 # Test secure devnet
-curl "https://cati-etnoqa-fast-devnet.helius-rpc.com" \
+curl "https://your-devnet-staked-endpoint.helius-rpc.com" \
   -X POST \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","id":1,"method":"getHealth"}'
@@ -232,7 +232,7 @@ console.log(getRPCEndpoint('devnet'));
 
 // Get secure devnet RPC
 console.log(getRPCEndpoint('devnet', true));
-// https://cati-etnoqa-fast-devnet.helius-rpc.com
+// https://your-devnet-staked-endpoint.helius-rpc.com
 
 // Get WebSocket
 console.log(getWSEndpoint('devnet'));

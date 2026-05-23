@@ -37,7 +37,7 @@ The project is pre-configured with Helius RPC endpoints:
 HELIUS_DEVNET_URL=https://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
 
 # Helius Devnet RPC (Secure/Fast)
-HELIUS_SECURE_DEVNET_URL=https://cati-etnoqa-fast-devnet.helius-rpc.com
+HELIUS_SECURE_DEVNET_URL=https://your-devnet-staked-endpoint.helius-rpc.com
 
 # Helius Devnet WebSocket
 HELIUS_DEVNET_WSS_URL=wss://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
@@ -252,12 +252,12 @@ https://dashboard.helius.dev
 
 ### Devnet
 - **Standard RPC**: `https://devnet.helius-rpc.com/?api-key=YOUR_KEY`
-- **Secure RPC**: `https://cati-etnoqa-fast-devnet.helius-rpc.com`
+- **Secure RPC**: `https://your-devnet-staked-endpoint.helius-rpc.com`
 - **WebSocket**: `wss://devnet.helius-rpc.com/?api-key=YOUR_KEY`
 
 ### Mainnet (Future)
 - **Standard RPC**: `https://mainnet.helius-rpc.com/?api-key=YOUR_KEY`
-- **Secure RPC**: `https://alli-pigt1b-fast-mainnet.helius-rpc.com`
+- **Secure RPC**: `https://your-mainnet-staked-endpoint.helius-rpc.com`
 - **WebSocket**: `wss://mainnet.helius-rpc.com/?api-key=YOUR_KEY`
 
 ## Troubleshooting

@@ -1,5 +1,5 @@
 {
-  "name": "@dark-protocol/protocol",
+  "name": "@openclawdsol/dark-protocol",
   "version": "0.2.0",
   "description": "Dark Protocol — on-chain types, interfaces, and program ABIs for the Dark DeFi privacy layer on Solana",
   "main": "dist/index.js",

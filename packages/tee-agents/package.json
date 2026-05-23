@@ -1,5 +1,5 @@
 {
-  "name": "@dark-protocol/tee-agents",
+  "name": "@openclawdsol/dark-tee-agents",
   "version": "0.1.0",
   "description": "TEE-attested confidential AI agents on Solana: x402 private inference payments anchored by the Solana Attestation Service",
   "type": "module",

@@ -1,6 +1,6 @@
 {
   "name": "sas-lib",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "Solana Attestation Service TypeScript client — adapted for Dark DeFi with confidential-agent and inference-receipt extensions.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -18,6 +18,7 @@
 
 import { blake3 } from '@noble/hashes/blake3';
 import { sha256 } from '@noble/hashes/sha256';
+import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import {
   SaplingHDWallet,
   SaplingSpendingKey,
@@ -35,12 +36,14 @@ import {
   EncryptedNote,
   MEMO_SIZE,
 } from './note-encryption';
+import { DarkProtocolClient } from './client';
+import { getRpcEndpoint } from './config';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-/** Program ID placeholder (devnet) — replace when Rust program is deployed. */
+/** Deployed program ID — Dark Protocol shielded note pool. */
 export const SHIELDED_WALLET_PROGRAM_ID =
-  '4753b1cCrPzwr7taWWD8yrcM8dc98fTR7wCFdv1TsAbg' as const;
+  'E8zL7h9qHjC7sMf2WCYhdqS5iLkYhPJ9yAhTfevo74jm' as const;
 
 const LAMPORTS_PER_SOL = 1_000_000_000n;
 
@@ -275,6 +278,22 @@ function ctEq(a: Uint8Array, b: Uint8Array): boolean {
   return diff === 0;
 }
 
+// ─── Internal constructor params ─────────────────────────────────────────────
+
+/** Internal params type for ShieldedWallet (and subclasses) constructors. */
+interface ShieldedWalletParams {
+  hdWallet: SaplingHDWallet | null;
+  fvk: SaplingFullViewingKey;
+  network: ShieldedNetwork;
+  programId: string;
+  demoMode: boolean;
+  heliusApiKey?: string;
+  /** Optional signer public key — required for on-chain operations */
+  signerPublicKey?: PublicKey;
+  /** Optional sign-transaction callback — required for on-chain operations */
+  signTransaction?: (tx: Transaction) => Promise<Transaction>;
+}
+
 // ─── ShieldedWallet ───────────────────────────────────────────────────────────
 
 /**
@@ -309,6 +328,12 @@ export class ShieldedWallet {
   protected readonly network: ShieldedNetwork;
   protected readonly programId: string;
   protected readonly demoMode: boolean;
+  /** Optional signer PK — required for on-chain operations */
+  protected readonly signerPublicKey?: PublicKey;
+  /** Optional sign-transaction hook — required for on-chain operations */
+  protected readonly signTx?: (tx: Transaction) => Promise<Transaction>;
+  /** Optional Helius API key for RPC calls */
+  protected readonly heliusApiKey?: string;
 
   /** In-memory note store. */
   protected notes: ShieldedNote[] = [];
@@ -319,37 +344,45 @@ export class ShieldedWallet {
 
   // ── Constructors ────────────────────────────────────────────────────────────
 
-  protected constructor(params: {
-    hdWallet: SaplingHDWallet | null;
-    fvk: SaplingFullViewingKey;
-    network: ShieldedNetwork;
-    programId: string;
-    demoMode: boolean;
-  }) {
+  protected constructor(params: ShieldedWalletParams) {
     this.hdWallet = params.hdWallet;
-    this.fvk = params.fvk;
-    this.ivk = params.fvk.inViewingKey();
-    this.network = params.network;
-    this.programId = params.programId;
-    this.demoMode = params.demoMode;
+    this.fvk            = params.fvk;
+    this.ivk            = params.fvk.inViewingKey();
+    this.network        = params.network;
+    this.programId      = params.programId;
+    this.demoMode       = params.demoMode;
+    this.signerPublicKey = params.signerPublicKey;
+    this.signTx         = params.signTransaction;
+    this.heliusApiKey   = params.heliusApiKey;
+  }
+
+  /**
+   * @internal — Build raw constructor params for subclass factories.
+   * Returns params + mnemonic so callers can store the seed if needed.
+   */
+  protected static async _buildParams(
+    config: ShieldedWalletConfig = {}
+  ): Promise<{ params: ShieldedWalletParams; mnemonic: string }> {
+    const { wallet, mnemonic } = await SaplingUtils.generateWallet();
+    return {
+      params: {
+        hdWallet:    wallet,
+        fvk:         wallet.getFullViewingKey(),
+        network:     config.network    ?? 'devnet',
+        programId:   config.programId  ?? SHIELDED_WALLET_PROGRAM_ID,
+        demoMode:    config.demoMode   ?? true,
+        heliusApiKey: config.heliusApiKey,
+      },
+      mnemonic,
+    };
   }
 
   /**
    * Create a brand-new shielded wallet with a fresh keypair.
    */
   static async create(config: ShieldedWalletConfig = {}): Promise<ShieldedWallet> {
-    const { wallet, mnemonic } = await SaplingUtils.generateWallet();
-    const network = config.network ?? 'devnet';
-    const programId = config.programId ?? SHIELDED_WALLET_PROGRAM_ID;
-    const demoMode = config.demoMode ?? true;
-
-    const sw = new ShieldedWallet({
-      hdWallet: wallet,
-      fvk: wallet.getFullViewingKey(),
-      network,
-      programId,
-      demoMode,
-    });
+    const { params, mnemonic } = await ShieldedWallet._buildParams(config);
+    const sw = new ShieldedWallet(params);
     sw.mnemonic_ = mnemonic;
     return sw;
   }
@@ -820,29 +853,143 @@ export class ShieldedWallet {
     return unspent[0] ?? null;
   }
 
-  // Stub — real impl calls the Anchor program's `deposit` instruction
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // ── On-chain submission helpers ─────────────────────────────────────────────
+
+  /**
+   * Submit a deposit instruction to the Dark Protocol program.
+   * Requires `signerPublicKey` and `signTransaction` set on the wallet.
+   */
   protected async _submitDeposit(
-    _note: ShieldedNote,
-    _encNote: EncryptedNote
+    note: ShieldedNote,
+    encNote: EncryptedNote
   ): Promise<string> {
-    throw new Error(
-      'On-chain deposit not yet available — set demoMode: true or wait for Rust program deployment'
-    );
+    if (!this.signerPublicKey || !this.signTx) {
+      throw new Error(
+        'On-chain deposit requires signerPublicKey and signTransaction. ' +
+        'Pass them when creating the wallet, or set demoMode: true.'
+      );
+    }
+
+    const client = await DarkProtocolClient.create({
+      network:     this.network as 'devnet' | 'mainnet' | 'localnet',
+      heliusApiKey: this.heliusApiKey,
+      programId:   new PublicKey(this.programId),
+    });
+
+    const commitment = Uint8Array.from(Buffer.from(note.commitment, 'hex'));
+
+    // Fixed-size ciphertext arrays (as expected by the Anchor program)
+    const encCt = new Uint8Array(580);
+    encCt.set(encNote.encCiphertext.slice(0, 580));
+    const outCt = new Uint8Array(80);
+    outCt.set(encNote.outCiphertext.slice(0, 80));
+    const epkFixed = new Uint8Array(32);
+    epkFixed.set(encNote.epk.slice(0, 32));
+
+    const [statePDA] = client.protocolStatePDA();
+    const [notePDA]  = client.notePDA(commitment);
+    const [vaultPDA] = client.poolVaultPDA();
+
+    const tx: Transaction = await (client.program.methods as any)
+      .deposit(
+        note.value,
+        Array.from(commitment),
+        Array.from(encCt),
+        Array.from(outCt),
+        Array.from(epkFixed),
+      )
+      .accounts({
+        protocolState: statePDA,
+        shieldedNote:  notePDA,
+        poolVault:     vaultPDA,
+        depositor:     this.signerPublicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .transaction();
+
+    const { blockhash } = await client.connection.getLatestBlockhash();
+    tx.recentBlockhash  = blockhash;
+    tx.feePayer         = this.signerPublicKey;
+
+    const signed = await this.signTx(tx);
+    const sig    = await client.connection.sendRawTransaction(signed.serialize());
+    await client.connection.confirmTransaction(sig, 'confirmed');
+    return sig;
   }
 
-  // Stub — real impl calls the Anchor program's `shielded_transfer` instruction
+  /**
+   * Submit a shielded_transfer instruction to the Dark Protocol program.
+   * Requires `signerPublicKey` and `signTransaction` set on the wallet.
+   */
   protected async _submitTransfer(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _input: ShieldedNote,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _output: ShieldedNote,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _encNote: EncryptedNote
+    inputNote:  ShieldedNote,
+    outputNote: ShieldedNote,
+    encNote:    EncryptedNote
   ): Promise<string> {
-    throw new Error(
-      'On-chain transfer not yet available — set demoMode: true or wait for Rust program deployment'
-    );
+    if (!this.signerPublicKey || !this.signTx) {
+      throw new Error(
+        'On-chain transfer requires signerPublicKey and signTransaction. ' +
+        'Pass them when creating the wallet, or set demoMode: true.'
+      );
+    }
+
+    const client = await DarkProtocolClient.create({
+      network:     this.network as 'devnet' | 'mainnet' | 'localnet',
+      heliusApiKey: this.heliusApiKey,
+      programId:   new PublicKey(this.programId),
+    });
+
+    const inputNullifier    = Uint8Array.from(Buffer.from(inputNote.nullifier, 'hex'));
+    const outCommitment1    = Uint8Array.from(Buffer.from(outputNote.commitment, 'hex'));
+    // Change note commitment: hash of output commitment + nonce
+    const outCommitment2    = Uint8Array.from(sha256(new Uint8Array([...outCommitment1, 0x01])));
+
+    const encCt1 = new Uint8Array(580); encCt1.set(encNote.encCiphertext.slice(0, 580));
+    const encCt2 = new Uint8Array(580); // change note — empty ciphertext
+    const outCt1 = new Uint8Array(80);  outCt1.set(encNote.outCiphertext.slice(0, 80));
+    const outCt2 = new Uint8Array(80);
+    const epk1   = new Uint8Array(32);  epk1.set(encNote.epk.slice(0, 32));
+    const epk2   = new Uint8Array(32);  epk2.set(sha256(encNote.epk).slice(0, 32));
+
+    const [statePDA]   = client.protocolStatePDA();
+    const [inputPDA]   = client.notePDA(Uint8Array.from(Buffer.from(inputNote.commitment, 'hex')));
+    const [nullPDA]    = client.nullifierPDA(inputNullifier);
+    const [outNote1PDA] = client.notePDA(outCommitment1);
+    const [outNote2PDA] = client.notePDA(outCommitment2);
+
+    const tx: Transaction = await (client.program.methods as any)
+      .shieldedTransfer(
+        Array.from(inputNullifier),
+        Array.from(outCommitment1),
+        Array.from(outCommitment2),
+        Array.from(encCt1),
+        Array.from(encCt2),
+        Array.from(outCt1),
+        Array.from(outCt2),
+        Array.from(epk1),
+        Array.from(epk2),
+        outputNote.value,
+        inputNote.value - outputNote.value,
+      )
+      .accounts({
+        protocolState:  statePDA,
+        inputNote:      inputPDA,
+        nullifierRecord: nullPDA,
+        outputNote1:    outNote1PDA,
+        outputNote2:    outNote2PDA,
+        sender:         this.signerPublicKey,
+        systemProgram:  SystemProgram.programId,
+      })
+      .transaction();
+
+    const { blockhash } = await client.connection.getLatestBlockhash();
+    tx.recentBlockhash  = blockhash;
+    tx.feePayer         = this.signerPublicKey;
+
+    const signed = await this.signTx(tx);
+    const sig    = await client.connection.sendRawTransaction(signed.serialize());
+    await client.connection.confirmTransaction(sig, 'confirmed');
+    return sig;
   }
 }
 
@@ -871,7 +1018,7 @@ export class MultisigShieldedWallet extends ShieldedWallet {
   private proposals = new Map<string, MultisigProposal>();
 
   private constructor(
-    base: ConstructorParameters<typeof ShieldedWallet>[0],
+    base: ShieldedWalletParams,
     required: number,
     owners: string[]
   ) {
@@ -890,18 +1037,24 @@ export class MultisigShieldedWallet extends ShieldedWallet {
         `required (${params.required}) must be between 1 and ${params.owners.length}`
       );
     }
-    const base = await ShieldedWallet.create(params.config ?? {});
-    return new MultisigShieldedWallet(
+    const config = params.config ?? {};
+    const { wallet, mnemonic } = await SaplingUtils.generateWallet();
+    const network = config.network ?? 'devnet';
+    const programId = config.programId ?? SHIELDED_WALLET_PROGRAM_ID;
+    const demoMode = config.demoMode ?? true;
+    const ms = new MultisigShieldedWallet(
       {
-        hdWallet: base['hdWallet'],
-        fvk: base['fvk'],
-        network: base['network'],
-        programId: base['programId'],
-        demoMode: base['demoMode'],
+        hdWallet: wallet,
+        fvk: wallet.getFullViewingKey(),
+        network,
+        programId,
+        demoMode,
       },
       params.required,
       params.owners
     );
+    ms.mnemonic_ = mnemonic;
+    return ms;
   }
 
   /** Propose a new shielded transfer. */

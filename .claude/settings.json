@@ -8,7 +8,11 @@
       "Bash(diff ARCHITECTURE.md docs/ARCHITECTURE.md)",
       "Bash(echo \"ARCHITECTURE diff: $?\")",
       "Bash(awk '{print $1}')",
-      "Bash(npm ls *)"
+      "Bash(npm ls *)",
+      "Bash(mkdir -p /Users/8bit/bots/Cladwbot-solana/solana-clawd/openclawd-framework/Dark-Defi/packages/sas-lib/src *)"
+    ],
+    "additionalDirectories": [
+      "/Users/8bit/bots/Cladwbot-solana/solana-clawd/openclawd-framework/Dark-Defi/packages/sas-lib-src-tmp"
     ]
   }
 }

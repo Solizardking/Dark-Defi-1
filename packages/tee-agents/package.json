@@ -39,7 +39,7 @@
   "dependencies": {
     "@solana/kit": "^5.0.0",
     "bs58": "^6.0.0",
-    "sas-lib": "^1.0.10",
+    "sas-lib": "*",
     "tweetnacl": "^1.0.3"
   },
   "devDependencies": {

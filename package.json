@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
+    "build:sas": "npm run build -w sas-lib",
     "build:protocol": "npm run build -w @dark-protocol/sdk --if-present || tsc -p packages/protocol",
     "build:sdk": "npm run build -w @dark-protocol/sdk",
     "build:terminal": "npm run build -w dark-x402-terminal",

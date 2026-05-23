@@ -1,0 +1,42 @@
+{
+  "name": "sas-lib",
+  "version": "1.0.10",
+  "description": "Solana Attestation Service TypeScript client — adapted for Dark DeFi with confidential-agent and inference-receipt extensions.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "commonjs",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "solana",
+    "attestation",
+    "sas",
+    "dark-protocol",
+    "tee",
+    "confidential"
+  ],
+  "author": "Dark Protocol / Solana Foundation",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@solana/kit": "^5.0.0",
+    "borsh": "^2.0.0",
+    "borsher": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

@@ -131,7 +131,7 @@ https://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
 
 **Devnet (Secure):**
 ```
-https://cati-etnoqa-fast-devnet.helius-rpc.com
+https://your-devnet-staked-endpoint.helius-rpc.com
 ```
 
 **Mainnet (Public):**
@@ -141,7 +141,7 @@ https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
 
 **Mainnet (Secure):**
 ```
-https://alli-pigt1b-fast-mainnet.helius-rpc.com
+https://your-mainnet-staked-endpoint.helius-rpc.com
 ```
 
 **Localnet:**

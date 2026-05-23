@@ -18,12 +18,12 @@ The project is pre-configured with **Helius secure RPC endpoints** for both devn
 
 ### Devnet
 - **Standard RPC:** `https://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY`
-- **Secure RPC:** `https://cati-etnoqa-fast-devnet.helius-rpc.com` ⚡ **Recommended**
+- **Secure RPC:** `https://your-devnet-staked-endpoint.helius-rpc.com` ⚡ **Recommended**
 - **WebSocket:** `wss://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY`
 
 ### Mainnet
 - **Standard RPC:** `https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY`
-- **Secure RPC:** `https://alli-pigt1b-fast-mainnet.helius-rpc.com` ⚡ **Recommended**
+- **Secure RPC:** `https://your-mainnet-staked-endpoint.helius-rpc.com` ⚡ **Recommended**
 - **WebSocket:** `wss://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY`
 
 **Benefits of Secure RPC:**

@@ -19,9 +19,9 @@ The Enhanced Google Gen AI Agent includes:
 
 ### 1. Environment Variables
 
-Your `.env` file already has:
+Add the following to your `.env` file:
 ```bash
-GOOGLE_GENERATIVE_AI_API_KEY=AIzaSyAdNysDBqAEN_TwZOIqrB7K9ZBcsbm-I2w
+GOOGLE_GENERATIVE_AI_API_KEY=your_google_ai_api_key
 HELIUS_RPC_URL=https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
 ```
 

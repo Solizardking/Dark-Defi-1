@@ -97,7 +97,7 @@ The dashboard is pre-configured for the X402 token. Configuration is located in 
 
 ```typescript
 const CONFIG = {
-  BIRDEYE_API_KEY: '16db9dc5f89b4d3eb1c8bd055399ae5a',
+  BIRDEYE_API_KEY: process.env.BIRDEYE_API_KEY || '',
   BIRDEYE_WSS_URL: 'wss://public-api.birdeye.so/socket/solana',
   BIRDEYE_API_URL: 'https://public-api.birdeye.so',
   TOKEN_ADDRESS: '6H8uyJYrPVcra6Fi7iWh29DXSm8KctzhHRyXmPwKpump',

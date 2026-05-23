@@ -1,355 +1,311 @@
-# Zcash Integration for Solana Privacy Protocol
+# Zcash Sapling Integration
 
-This document describes the integration of Zcash's privacy technology into a Solana-based privacy protocol.
+> **Implementation status:** The cryptographic primitives described below are
+> fully ported to **TypeScript** in `packages/sdk/src/` and
+> `packages/protocol/`. The **Rust on-chain program** (shown as reference
+> structs) is on the roadmap; those files do not yet exist in this repository.
+> Code blocks marked `// TypeScript` reflect live code; blocks marked
+> `// Rust (roadmap)` are design specifications.
+
+---
 
 ## Overview
 
-We've successfully adapted Zcash's battle-tested privacy primitives to work on Solana, creating a comprehensive shielded wallet system that provides:
+Dark DeFi adapts Zcash's battle-tested Sapling privacy primitives to Solana, providing:
 
-- **Zcash-style Sapling addresses** with diversifier support
-- **Encrypted notes** with viewing key/spending key separation
-- **Zero-knowledge proofs** for private transactions
-- **Nullifier tracking** to prevent double-spending
-- **Merkle trees** for efficient commitment tracking
+- **Zcash-style Sapling addresses** — 43-byte diversified payment addresses
+- **Encrypted notes** — ChaCha20-Poly1305 AEAD with viewing-key / spending-key separation
+- **Nullifier tracking** — prevents double-spending without revealing note contents
+- **Merkle commitments** — efficient shielded pool membership proofs
+- **ZIP-32 HD wallets** — one mnemonic, unlimited diversified addresses
 
-## Architecture
+---
 
-### 1. Zcash Components Adapted
+## Cryptographic Design
 
-#### From Zcash Source: `/src/zcash/address/`
+### Key Hierarchy (identical to Zcash Sapling)
 
-| Zcash Component | Solana Implementation | Location |
-|-----------------|----------------------|----------|
-| `sapling.hpp` - Sapling addresses | `crypto/sapling.rs` | Programs/dark-protocol |
-| `NoteEncryption.hpp` - Note encryption | `crypto/note_encryption.rs` | Programs/dark-protocol |
-| `Note.hpp` - Note structures | Integrated into `state.rs` and `shielded-wallet` | Multiple locations |
-| Spending/Viewing keys | Full implementation in `sapling.rs` | Programs/dark-protocol |
-| Diversifiers (11 bytes) | Exact same size and concept | Programs/dark-protocol |
+```text
+seed (mnemonic)
+  └─ SaplingSpendingKey (sk)               32 bytes — secret, never on-chain
+       ├─ SaplingExpandedSpendingKey        (ask 32 + nsk 32 + ovk 32)
+       └─ SaplingFullViewingKey (fvk)       (ak 32 + nk 32 + ovk 32)
+            └─ SaplingIncomingViewingKey    64-bit scalar
+                 └─ SaplingPaymentAddress   (diversifier 11 + pk_d 32) = 43 bytes
+```
 
-### 2. Key Cryptographic Primitives
+### Data structures — TypeScript (live)
 
-#### Sapling Address System ([sapling.rs](programs/dark-protocol/src/crypto/sapling.rs))
+```typescript
+// packages/sdk/src/sapling.ts
+
+export interface SaplingSpendingKey {
+  sk: Uint8Array;          // 32 bytes
+}
+
+export interface SaplingExpandedSpendingKey {
+  ask: Uint8Array;         // 32 bytes — spend authorizing key
+  nsk: Uint8Array;         // 32 bytes — nullifier deriving key
+  ovk: Uint8Array;         // 32 bytes — outgoing viewing key
+}
+
+export interface SaplingFullViewingKey {
+  ak:  Uint8Array;         // 32 bytes — authentication key
+  nk:  Uint8Array;         // 32 bytes — nullifier deriving key
+  ovk: Uint8Array;         // 32 bytes — outgoing viewing key
+}
+
+export interface SaplingPaymentAddress {
+  d:    Uint8Array;        // 11 bytes — diversifier (same as Zcash)
+  pk_d: Uint8Array;        // 32 bytes — diversified transmission key
+}
+```
+
+### Data structures — Rust (roadmap, on-chain target)
 
 ```rust
-// Spending Key (sk) -> Expanded Spending Key (ask, nsk, ovk)
-// -> Full Viewing Key (ak, nk, ovk) -> Incoming Viewing Key (ivk)
-// -> Payment Address (diversifier + pk_d)
+// programs/dark-protocol/src/crypto/sapling.rs  (not yet implemented)
 
 pub struct SaplingSpendingKey {
     pub sk: [u8; 32],
 }
 
+pub struct SaplingExpandedSpendingKey {
+    pub ask: [u8; 32],   // spend authorizing key
+    pub nsk: [u8; 32],   // nullifier deriving key
+    pub ovk: [u8; 32],   // outgoing viewing key
+}
+
 pub struct SaplingFullViewingKey {
-    pub ak: [u8; 32],  // Authentication key
-    pub nk: [u8; 32],  // Nullifier deriving key
-    pub ovk: [u8; 32], // Outgoing viewing key
+    pub ak:  [u8; 32],   // authentication key
+    pub nk:  [u8; 32],   // nullifier deriving key
+    pub ovk: [u8; 32],   // outgoing viewing key
 }
 
 pub struct SaplingPaymentAddress {
-    pub d: [u8; 11],   // Diversifier (same as Zcash)
-    pub pk_d: [u8; 32], // Diversified transmission key
+    pub d:    [u8; 11],  // diversifier (same as Zcash)
+    pub pk_d: [u8; 32],  // diversified transmission key
 }
 ```
 
-#### Note Encryption ([note_encryption.rs](programs/dark-protocol/src/crypto/note_encryption.rs))
+---
+
+## Note Encryption
+
+### Structure (TypeScript — live)
+
+```typescript
+// packages/sdk/src/note-encryption.ts
+
+export interface SaplingNotePlaintext {
+  leadbyte: number;        // 1 byte  — ZIP 212 indicator
+  d:        Uint8Array;    // 11 bytes — diversifier
+  value:    bigint;        // 8 bytes  — amount
+  rseed:    Uint8Array;    // 32 bytes — randomness seed
+  memo:     Uint8Array;    // 512 bytes
+}
+
+export interface SaplingOutgoingPlaintext {
+  pk_d:  Uint8Array;       // 32 bytes — recipient transmission key
+  esk:   Uint8Array;       // 32 bytes — ephemeral secret
+}
+```
+
+### Structure (Rust — roadmap)
 
 ```rust
-// Encrypt notes for recipients using their incoming viewing key
-// Implements ChaCha20-Poly1305 AEAD encryption (simplified for Solana)
+// programs/dark-protocol/src/crypto/note_encryption.rs  (not yet implemented)
 
 pub struct NoteEncryption {
-    esk: [u8; 32],  // Ephemeral secret key
-    epk: [u8; 32],  // Ephemeral public key
-    h_sig: [u8; 32], // Signature hash
+    esk:   [u8; 32],     // ephemeral secret key
+    epk:   [u8; 32],     // ephemeral public key (transmitted)
+    h_sig: [u8; 32],     // signature hash
 }
 
 pub struct SaplingNotePlaintext {
-    pub leadbyte: u8,    // ZIP 212 indicator
-    pub d: [u8; 11],      // Diversifier
-    pub value: u64,       // Note amount
-    pub rseed: [u8; 32],  // Randomness seed
-    pub memo: [u8; 512],  // Memo field
+    pub leadbyte: u8,       // ZIP 212 indicator
+    pub d:        [u8; 11], // diversifier
+    pub value:    u64,      // note amount
+    pub rseed:    [u8; 32], // randomness seed
+    pub memo:     [u8; 512],
 }
 ```
 
-### 3. Shielded Wallet Program
+---
 
-The [`shielded-wallet`](programs/shielded-wallet/src/lib.rs) program provides a complete privacy-preserving wallet:
+## Using the TypeScript SDK
 
-#### Core Features
+### 1 — Generate a shielded wallet
 
-1. **Hierarchical Deterministic Wallets** (ZIP 32-inspired)
-   - One master spending key generates unlimited viewing keys
-   - Each viewing key can generate unlimited diversified addresses
-   - Full key hierarchy: `sk -> fvk -> ivk -> address`
+```typescript
+import { SaplingHDWallet, SaplingUtils } from '@dark-protocol/sdk';
 
-2. **Shielded Transactions**
-   - `initialize_wallet`: Create wallet with FVK (never store spending key on-chain)
-   - `create_diversified_address`: Generate new privacy address
-   - `shield_tokens`: Deposit transparent tokens into shielded pool
-   - `unshield_tokens`: Withdraw with zero-knowledge proof
-   - `private_transfer`: Transfer between shielded addresses
-   - `view_note`: Decrypt notes with viewing key
+// New wallet
+const { wallet, mnemonic } = await SaplingUtils.generateWallet();
 
-3. **Privacy Guarantees**
-   - Amounts are hidden (encrypted in notes)
-   - Sender/receiver identities are hidden (shielded addresses)
-   - Transaction graph is hidden (using nullifiers)
-   - Selective disclosure (via viewing keys)
-
-## Implementation Details
-
-### Key Differences from Zcash
-
-| Aspect | Zcash | Our Solana Implementation |
-|--------|-------|---------------------------|
-| Curve | Jubjub (on BLS12-381) | Simplified to use Blake3 + SHA256 |
-| Zero-Knowledge Proofs | Groth16 SNARKs | Placeholder (implement with Groth16 later) |
-| Encryption | ChaCha20-Poly1305 | Simplified (use proper AEAD in production) |
-| Merkle Trees | Incremental with Pedersen hashes | SHA256-based (can upgrade to Poseidon) |
-| Storage | UTXO-based blockchain | Account-based Solana program |
-
-### What Works Like Zcash
-
-✅ **Address Structure**: Identical format (11-byte diversifier + 32-byte pk_d)
-✅ **Key Hierarchy**: Same derivation chain (sk -> fvk -> ivk -> address)
-✅ **Note Format**: Compatible structure with value, diversifier, rseed, memo
-✅ **Nullifiers**: Same concept for preventing double-spending
-✅ **Commitments**: Pedersen-style commitments (simplified)
-✅ **Viewing Keys**: Full support for view-only access
-
-### Security Considerations
-
-⚠️ **Current Limitations** (for production, implement proper versions):
-
-1. **Cryptography**: Using simplified hash-based crypto instead of elliptic curves
-2. **Zero-Knowledge Proofs**: Placeholder verification (need actual Groth16/PLONK)
-3. **Encryption**: Simplified ChaCha20-Poly1305 (use production AEAD)
-4. **Randomness**: Using deterministic hashing (need proper RNG)
-
-## File Structure
-
-```
-dark-protocol/
-├── programs/
-│   ├── dark-protocol/           # Main protocol
-│   │   └── src/
-│   │       ├── crypto/
-│   │       │   ├── sapling.rs             # Zcash Sapling addresses ⭐
-│   │       │   ├── note_encryption.rs     # Zcash note encryption ⭐
-│   │       │   ├── commitment.rs          # Pedersen commitments
-│   │       │   ├── nullifier.rs           # Nullifier generation
-│   │       │   ├── merkle.rs              # Merkle tree
-│   │       │   └── zk_proof.rs            # ZK proof verification
-│   │       ├── state.rs                   # Account structures
-│   │       ├── lib.rs                     # Main program logic
-│   │       └── errors.rs                  # Error codes
-│   │
-│   └── shielded-wallet/         # Zcash-style wallet ⭐
-│       └── src/
-│           └── lib.rs            # Complete wallet implementation
-│
-└── Anchor.toml                  # Anchor configuration
+// Restore
+const wallet = await SaplingHDWallet.fromMnemonic(mnemonic);
+const addr = wallet.getDefaultAddress();
+console.log('Shielded address:', addr.toBase58()); // 43-byte diversified address
+const addr2 = wallet.getDiversifiedAddress(1);     // unlimited addresses, same wallet
 ```
 
-## Usage Example
+### 2 — Encrypt a note
 
-### 1. Initialize Wallet
+```typescript
+import { NoteEncryptionUtils } from '@dark-protocol/sdk';
 
-```rust
-// Generate spending key (off-chain, never revealed)
-let sk = SaplingSpendingKey::random(&seed);
-let fvk = sk.full_viewing_key();
+const note = NoteEncryptionUtils.createNote({
+  recipient: wallet.getDefaultAddress(),
+  value:     BigInt(1_000_000),   // lamports
+  memo:      'private transfer',
+});
 
-// Initialize wallet with only viewing key
-initialize_wallet(
-    ctx,
-    hash(sk),  // Commitment only
-    fvk,       // Full viewing key
-    default_diversifier,
+const encrypted  = NoteEncryptionUtils.encryptNote(note, wallet.outgoingViewKey);
+const decrypted  = NoteEncryptionUtils.decryptNote(encrypted, wallet.incomingViewKey);
+```
+
+### 3 — Shield tokens (private deposit)
+
+```typescript
+import { DarkProtocolClient, DarkWallet } from '@dark-protocol/sdk';
+
+const client = await DarkProtocolClient.create({
+  heliusApiKey: process.env.HELIUS_API_KEY!,
+  network: 'devnet',
+});
+
+const { wallet } = await DarkWallet.generate(client);
+
+// Shield 0.01 SOL
+await wallet.shieldTokens(
+  BigInt(10_000_000),            // 0.01 SOL in lamports
+  recipientShieldedAddress,
 );
 ```
 
-### 2. Create Privacy Address
+### 4 — Private swap via Jupiter
 
-```rust
-// Generate diversified address (can create unlimited)
-create_diversified_address(
-    ctx,
-    diversifier,  // 11 bytes, like Zcash
-    index,        // Address index
+```typescript
+import { PrivateSwapManager, KNOWN_TOKENS } from '@dark-protocol/sdk';
+import { PublicKey } from '@solana/web3.js';
+
+const swaps = new PrivateSwapManager(client, {
+  jupiterApiKey: process.env.JUPITER_API_KEY,
+  birdeyeApiKey: process.env.BIRDEYE_API_KEY,
+});
+
+const quote = await swaps.getQuoteWithOracle(
+  new PublicKey(KNOWN_TOKENS.SOL),
+  new PublicKey(KNOWN_TOKENS.USDC),
+  BigInt(10_000_000), // 0.01 SOL
+  50,                 // 0.5% slippage
 );
+
+await swaps.executePrivateSwap({
+  inputMint:       new PublicKey(KNOWN_TOKENS.SOL),
+  outputMint:      new PublicKey(KNOWN_TOKENS.USDC),
+  inputAmount:     BigInt(10_000_000),
+  minOutputAmount: quote.outputAmount,
+  slippageBps:     50,
+  userPublicKey:   wallet.publicKey,
+  validateWithOracle: true,
+});
 ```
 
-### 3. Shield Tokens (Deposit)
-
-```rust
-shield_tokens(
-    ctx,
-    amount,
-    recipient_address,  // 43-byte Sapling address
-    memo,               // 512-byte encrypted memo
-    rseed,              // Randomness for note
-);
-```
-
-### 4. Private Transfer
-
-```rust
-private_transfer(
-    ctx,
-    input_nullifiers,    // Spend existing notes
-    output_commitments,  // Create new notes
-    zk_proof,            // Prove transaction validity
-    merkle_proofs,       // Prove note existence
-);
-```
-
-### 5. Unshield (Withdraw)
-
-```rust
-unshield_tokens(
-    ctx,
-    nullifier,      // Prevent double-spend
-    amount,
-    merkle_proof,   // Prove note in tree
-    zk_proof,       // Prove ownership
-);
-```
-
-### 6. View Notes (Read-only)
-
-```rust
-let result = view_note(
-    ctx,
-    incoming_viewing_key,  // ivk for decryption
-);
-// Returns: { value, memo, diversifier }
-```
+---
 
 ## Comparison with Zcash
 
-### Similarities
+| Aspect | Zcash | Dark DeFi TypeScript | Dark DeFi Rust (roadmap) |
+| --- | --- | --- | --- |
+| **Address format** | 43-byte Sapling | ✅ Identical | ✅ Identical |
+| **Key hierarchy** | sk → fvk → ivk → addr | ✅ Identical | ✅ Identical |
+| **Note format** | ZIP 212 | ✅ Compatible | ✅ Compatible |
+| **Diversifiers** | 11-byte | ✅ Identical | ✅ Identical |
+| **Nullifiers** | Pedersen PRF | Hash-based sim | Pedersen PRF |
+| **Curve** | Jubjub (BLS12-381) | BLAKE2b / hash approx | Jubjub (BPF-stack aware) |
+| **ZK proofs** | Groth16 | Placeholder | Groth16 / PLONK |
+| **Encryption** | ChaCha20-Poly1305 | ✅ ChaCha20-Poly1305 | ✅ ChaCha20-Poly1305 |
+| **Merkle tree** | Incremental, Pedersen | SHA-256 | SHA-256 / Poseidon |
+| **Blockchain** | UTXO | Account (Solana) | Account (Solana) |
+| **Block time** | ~75 s | ~400 ms | ~400 ms |
 
-1. **Address Format**: Exact same 43-byte Sapling payment address
-2. **Key Hierarchy**: Identical sk -> fvk -> ivk -> address chain
-3. **Note Structure**: Compatible with Zcash note format
-4. **Diversifiers**: Same 11-byte diversifier system
-5. **Nullifiers**: Same double-spend prevention mechanism
-6. **Viewing Keys**: Same spend/view key separation
+---
 
-### Differences
+## Differences from Zcash (by design)
 
-1. **Blockchain Model**: Account-based (Solana) vs UTXO (Zcash)
-2. **Consensus**: Proof-of-Stake (Solana) vs Proof-of-Work (Zcash)
-3. **Performance**: 400ms blocks (Solana) vs 75s blocks (Zcash)
-4. **Fees**: ~$0.0002 (Solana) vs ~$0.01 (Zcash)
-5. **Smart Contracts**: Native support (Solana) vs limited (Zcash)
+1. **Account model** — Solana's account-based model replaces the UTXO model.
+   Notes are stored in Solana accounts keyed by commitment hash.
+2. **BPF stack constraints** — Jubjub curve operations exceed the 4 KB BPF
+   stack limit. The Rust on-chain program will use a stack-aware wrapper or
+   off-load heavy crypto to client-side proofs.
+3. **Threshold ElGamal** — moved off-chain to avoid BPF stack blowup. Keys are
+   re-combined off-chain and the result is submitted with a proof.
 
-## Building
+---
 
-```bash
-# Install Anchor if needed
-npm install -g @coral-xyz/anchor-cli
+## Roadmap
 
-# Build all programs
-anchor build
+### Phase 1 — Cryptographic foundation ✅ (TypeScript)
 
-# Or use cargo directly
-cargo build-sbf --manifest-path programs/dark-protocol/Cargo.toml
-cargo build-sbf --manifest-path programs/shielded-wallet/Cargo.toml
-```
+- [x] Sapling address system (`sapling.ts`)
+- [x] Note encryption / decryption (`note-encryption.ts`)
+- [x] ZIP-32 HD wallet derivation (`SaplingHDWallet`)
+- [x] Viewing key hierarchy
+- [x] Diversified address generation
+- [x] ChaCha20-Poly1305 AEAD
 
-## Testing
+### Phase 2 — On-chain Rust programs 📋
 
-```bash
-# Run tests
-anchor test
+- [ ] `programs/dark-protocol/src/crypto/sapling.rs`
+- [ ] `programs/dark-protocol/src/crypto/note_encryption.rs`
+- [ ] `programs/shielded-wallet/src/lib.rs` (shield / unshield / transfer / view)
+- [ ] Incremental Merkle tree with nullifier set on-chain
+- [ ] `anchor build` + devnet deployment
 
-# Or cargo test
-cargo test --manifest-path programs/dark-protocol/Cargo.toml
-```
+### Phase 3 — Proof system 📋
 
-## Deployment
+- [ ] Groth16 verifier for spend authorisation
+- [ ] Circuit: output note creation
+- [ ] Circuit: Merkle membership
+- [ ] Consider PLONK / Halo2 for recursive proofs
 
-```bash
-# Deploy to devnet
-solana config set --url devnet
-anchor deploy
+### Phase 4 — Production hardening 📋
 
-# Deploy to mainnet (after audits!)
-solana config set --url mainnet-beta
-anchor deploy
-```
-
-## Roadmap to Production
-
-### Phase 1: Core Cryptography ✅
-- [x] Sapling address system
-- [x] Note encryption/decryption
-- [x] Key derivation hierarchy
-- [x] Basic commitment scheme
-- [x] Nullifier generation
-
-### Phase 2: Proof System (Next)
-- [ ] Implement Groth16 verifier on-chain
-- [ ] Or use PLONK/Halo2 for better recursion
-- [ ] Circuit for spend authorization
-- [ ] Circuit for output note creation
-- [ ] Merkle tree membership proofs
-
-### Phase 3: Production Hardening
-- [ ] Replace hash-based crypto with proper curves
-- [ ] Implement real ChaCha20-Poly1305
-- [ ] Add proper randomness sources
+- [ ] Replace hash-based curve approximations with real jubjub
+- [ ] Production RNG (secure enclave / VRF)
 - [ ] Security audit
-- [ ] Formal verification
-
-### Phase 4: Advanced Features
+- [ ] Formal verification of circuits
 - [ ] Cross-program private calls
-- [ ] Privacy-preserving DEX integration
-- [ ] Compliance tools (viewing keys for auditors)
-- [ ] Mobile wallet support
-- [ ] Hardware wallet integration
+- [ ] Compliance tooling (selective disclosure with viewing keys)
+
+---
 
 ## References
 
 - [Zcash Protocol Specification](https://zips.z.cash/protocol/protocol.pdf)
-- [Sapling Protocol](https://z.cash/upgrade/sapling/)
-- [ZIP 32: Shielded Hierarchical Deterministic Wallets](https://zips.z.cash/zip-0032)
-- [ZIP 212: Allow Recipient to Derive Sapling Ephemeral Secret](https://zips.z.cash/zip-0212)
-- [Solana Documentation](https://docs.solana.com/)
-- [Anchor Framework](https://www.anchor-lang.com/)
-
-## Credits
-
-This implementation adapts cryptographic primitives from:
-- **Zcash** (MIT/Apache 2.0): Address system, note encryption, key hierarchy
-- **Electric Coin Company**: Sapling protocol design
-- **Zcash Community**: ZIP specifications and reference implementations
-
-Built for Solana using:
-- **Anchor Framework**: Solana program development
-- **Solana Web3.js**: Client library
-- **Rust**: Systems programming language
-
-## License
-
-Apache 2.0 (same as Zcash core components)
-
-## Security Warning
-
-⚠️ **This code is UNAUDITED and uses SIMPLIFIED cryptography.**
-
-DO NOT use in production without:
-1. Complete security audit
-2. Proper zero-knowledge proof implementation
-3. Production-grade encryption
-4. Formal verification
-5. Extensive testing on devnet/testnet
-
-This is a **proof-of-concept** demonstrating how Zcash's privacy technology can be adapted to Solana.
+- [ZIP-32: Shielded HD Wallets](https://zips.z.cash/zip-0032)
+- [ZIP-212: Recipient-Derived Ephemeral Secret](https://zips.z.cash/zip-0212)
+- [Sapling upgrade overview](https://z.cash/upgrade/sapling/)
+- [Solana Attestation Service](https://github.com/solana-foundation/solana-attestation-service)
 
 ---
 
-**Built with privacy in mind. Deploy with caution. 🔒**
+## Security Warning
+
+> ⚠️ **This code is UNAUDITED and uses simplified cryptography.**
+>
+> The TypeScript implementation is a faithful port of Zcash's address system
+> using hash-based approximations for the Jubjub elliptic-curve operations.
+> It is suitable for development, demos, and devnet testing **only**.
+>
+> Do not use on mainnet with real funds until:
+>
+> 1. A complete security audit is performed
+> 2. Zero-knowledge proofs are properly implemented
+> 3. The Rust on-chain program passes formal verification
+
+---
+
+**🔒 Built with privacy in mind. Deploy with caution.**

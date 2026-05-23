@@ -12,12 +12,14 @@
 
 <br/>
 
+[![CI](https://github.com/8bitsats/Dark-Defi/actions/workflows/ci.yml/badge.svg)](https://github.com/8bitsats/Dark-Defi/actions/workflows/ci.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Solana](https://img.shields.io/badge/Solana-Devnet%20%7C%20Mainnet-9945FF?style=flat-square&logo=solana&logoColor=white)](https://solana.com)
+[![Anchor](https://img.shields.io/badge/Anchor-0.32.1-9945FF?style=flat-square)](https://www.anchor-lang.com/)
+[![Solana](https://img.shields.io/badge/Solana-Mainnet%20Ready-9945FF?style=flat-square&logo=solana&logoColor=white)](https://solana.com)
 [![License](https://img.shields.io/badge/License-Apache%202.0-00ff41?style=flat-square)](LICENSE)
-[![Build](https://img.shields.io/badge/Build-Passing-00ff41?style=flat-square&logo=github-actions&logoColor=white)](https://github.com/8bitsats/darkterminal)
-[![Alpha](https://img.shields.io/badge/Status-Alpha-ff6600?style=flat-square)](https://github.com/8bitsats/darkterminal)
+[![Alpha](https://img.shields.io/badge/Status-Alpha-ff6600?style=flat-square)](https://github.com/8bitsats/Dark-Defi)
 [![Zcash](https://img.shields.io/badge/Zcash-Sapling%20Port-F4B728?style=flat-square)](https://z.cash)
+[![Deploy on Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/8bitsats/Dark-Defi&root=darkswap)
 
 </div>
 
@@ -60,6 +62,48 @@
 
 ---
 
+## ⚡ 30-Second Quickstart
+
+```bash
+npm install @openclawdsol/dark-protocol-sdk
+```
+
+```typescript
+import { ShieldedWallet, SaplingUtils } from '@openclawdsol/dark-protocol-sdk';
+
+// 1. Generate a privacy wallet (Zcash Sapling, ZIP-32 HD keys)
+const { wallet, mnemonic } = await SaplingUtils.generateWallet();
+console.log('Save your mnemonic:', mnemonic);
+
+// 2. Get your shielded address (43-byte Sapling address, like zs1…)
+const shieldedAddress = wallet.getDefaultAddress().toBase58();
+console.log('Shielded address:', shieldedAddress);
+
+// 3. Generate unlimited diversified addresses (unlinkable by observers)
+const addr1 = wallet.generateDiversifiedAddress(0).toBase58();
+const addr2 = wallet.generateDiversifiedAddress(1).toBase58();
+
+// 4. Create a shielded wallet and deposit SOL into the private pool
+const sw = await ShieldedWallet.create({ network: 'mainnet', demoMode: true });
+const deposit = await sw.deposit({ amount: 1_000_000_000n, memo: 'Private deposit' });
+console.log('Note commitment:', deposit.commitment);
+
+// 5. Transfer privately
+const transfer = await sw.transfer({
+  to: addr1,
+  amount: 500_000_000n,
+  memo: 'Dark payment',
+});
+
+// 6. Check shielded balance
+const { totalSol, notes } = await sw.getBalance();
+console.log(`Shielded balance: ${totalSol} SOL across ${notes.length} notes`);
+
+// 7. Export a view-only key (safe to share with auditors)
+const vk = sw.exportViewingKey();
+// auditors can decrypt notes but cannot spend
+```
+
 ## 🦞 Install
 
 ```bash
@@ -85,7 +129,7 @@ npm install @openclawdsol/dark-protocol
                          ║
                          ▼
 ╔═════════════════════════════════════════════════════════════╗
-║       @openclawdsol/dark-protocol-sdk  v0.3.0               ║
+║       @openclawdsol/dark-protocol-sdk  v0.3.1               ║
 ║  ┌─────────────┐  ┌──────────────┐  ┌─────────────────┐   ║
 ║  │ ShieldedWallet│  │ SaplingHDWallet│  │ NoteEncryption │   ║
 ║  │ deposit/xfer│  │ ZIP-32 HD keys│  │ ChaCha20-Poly  │   ║
@@ -412,13 +456,16 @@ node packages/tee-agents/dist/demo.js    # direct demo runner
 
 | Program | Address | Status |
 |---------|---------|--------|
-| **Solana Attestation Service** | `22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG` | ✅ Deployed — Solana Foundation |
-| **Dark Protocol** | `3KWLFYco7T2rUZkzjSSthjHGmbWmo9HAsRmvupDTomGC` | ⚠️ Placeholder — Rust program roadmap |
-| **Shielded Wallet** | `4753b1cCrPzwr7taWWD8yrcM8dc98fTR7wCFdv1TsAbg` | ⚠️ Placeholder — Rust program roadmap |
+| **Solana Attestation Service** | [`22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG`](https://explorer.solana.com/address/22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG) | ✅ Deployed — Solana Foundation |
+| **Dark Protocol (Shielded Note Pool)** | [`E8zL7h9qHjC7sMf2WCYhdqS5iLkYhPJ9yAhTfevo74jm`](https://explorer.solana.com/address/E8zL7h9qHjC7sMf2WCYhdqS5iLkYhPJ9yAhTfevo74jm) | 🟡 Built · Mainnet deploy pending funding |
 
-> The Dark Protocol and Shielded Wallet IDs are reserved addresses for the planned Anchor programs.
-> All current on-chain activity routes through the live SAS program.
-> The TypeScript SDK works today in demo mode without any on-chain settlement.
+The Dark Protocol Anchor program (`dark_protocol_program`) is fully implemented with:
+- **`deposit`** — shield SOL + store Sapling-encrypted note on-chain
+- **`withdraw`** — reveal nullifier, redeem SOL (double-spend protected via PDA)
+- **`shielded_transfer`** — spend one note → create two output notes (payment + change)
+
+> **Mainnet deploy wallet:** `AAqkn72VgkZqFbWggn9SvzjzMRW5zsZrTe5VZKu9DwaM` (needs ≥ 3 SOL)
+> Run `bash dark-protocol-program/deploy-mainnet.sh` once funded.
 
 ---
 
@@ -437,8 +484,8 @@ node packages/tee-agents/dist/demo.js    # direct demo runner
 | 🦞 Terminal CLI (Figlet, Inquirer, ora) | ✅ Working |
 | 🦞 TEE agent — spawn, attest, pay (x402), infer | ✅ Demo + live modes |
 | 🦞 SAS client (`sas-lib`) local workspace | ✅ Built from SAS source |
+| 🦞 Rust Anchor program — deposit / withdraw / shielded_transfer | ✅ Built · ID: `E8zL7h9qHjC7sMf2WCYhdqS5iLkYhPJ9yAhTfevo74jm` |
 | 🌑 ZK-SNARK circuits (Groth16 proofs) | 📋 Roadmap |
-| 🌑 Rust on-chain Zcash programs | 📋 Roadmap |
 | 🌑 Threshold ElGamal (on-chain key custody) | 📋 Roadmap — BPF stack constraint |
 | 🌑 FHE encrypted AMM | 📋 Roadmap |
 | 🌑 Production jubjub curve ops | 📋 Roadmap — current: hash approx |

@@ -1,7 +1,7 @@
 # Dependencies
 node_modules/
 
-# Secrets
+# Secrets & credentials — NEVER commit these
 .secrets/
 .env
 .env.*
@@ -11,12 +11,21 @@ client_secret_*.json
 x402-*.json
 *-keypair.json
 id.json
+.npmrc          # contains npm auth token — store in CI secret, not in git
 .npm
-# Build outputs
-dist/
+# Build outputs — allow SDK dist/ (needed for npm publish) and darkswap
 build/
 *.tsbuildinfo
+# Ignore dist everywhere except the published SDK
+dist/
+!packages/sdk/dist/
 
+# Anchor program build artifacts (large .so and C cache — rebuild from source)
+dark-protocol-program/target/
+dark-protocol-program/.anchor/
+
+# DarkSwap Next.js build
+darkswap/.next/
 # Compiled output emitted next to TypeScript source
 packages/protocol/**/*.js
 packages/protocol/**/*.js.map
@@ -33,9 +42,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Editor / OS
+# Editor / OS / local tooling
 .DS_Store
 .idea/
 .vscode/
 *.swp
 Thumbs.db
+.claude/          # project-local Claude Code settings (may contain tokens)

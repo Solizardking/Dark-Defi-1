@@ -1,0 +1,7 @@
+# Copy this file to .npmrc and fill in your token.
+# Never commit .npmrc — it is .gitignored.
+#
+# Get a publish token at https://www.npmjs.com/settings/<your-org>/tokens
+# (type: Publish, limited to @openclawdsol scope)
+//registry.npmjs.org/:_authToken=npm_REPLACE_WITH_YOUR_TOKEN
+@openclawdsol:registry=https://registry.npmjs.org/

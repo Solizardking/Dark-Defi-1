@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Secrets
+.secrets/
+.env
+.env.*
+*.env
+!.env.example
+client_secret_*.json
+x402-*.json
+*-keypair.json
+id.json
+.npm
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+darkswap
+# Compiled output emitted next to TypeScript source
+packages/protocol/**/*.js
+packages/protocol/**/*.js.map
+packages/protocol/**/*.d.ts
+packages/protocol/**/*.d.ts.map
+
+# Test/coverage
+coverage/
+.nyc_output/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+Thumbs.db

@@ -421,6 +421,75 @@
         .cfg-ok    { color: var(--green); }
         .cfg-miss  { color: var(--pink); }
 
+        /* ── Perps table ── */
+        .perps-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .perps-table th {
+            color: var(--dim);
+            font-weight: bold;
+            letter-spacing: 0.08em;
+            padding: 6px 10px;
+            text-align: right;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .perps-table th:first-child { text-align: left; }
+
+        .perps-table td {
+            padding: 7px 10px;
+            text-align: right;
+            border-bottom: 1px solid rgba(30,30,54,0.6);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .perps-table td:first-child { text-align: left; color: var(--cyan); font-weight: bold; }
+
+        .perps-table tr:hover td { background: rgba(179,102,255,0.06); }
+
+        .pos  { color: var(--green); }
+        .neg  { color: var(--pink);  }
+        .neu  { color: var(--text2); }
+
+        /* ── Orderbook ── */
+        .ob-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .ob-side { font-size: 11px; }
+        .ob-side-title { color: var(--dim); letter-spacing: .08em; margin-bottom: 6px; font-size: 10px; }
+
+        .ob-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(30,30,54,0.4);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .ob-bid .ob-row-price { color: var(--green); }
+        .ob-ask .ob-row-price { color: var(--pink);  }
+
+        /* ── Candle spark ── */
+        .candle-bar-wrap {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 60px;
+            margin-top: 8px;
+        }
+
+        .candle-bar {
+            flex: 1;
+            border-radius: 2px 2px 0 0;
+            min-height: 2px;
+        }
+
         /* ── Alert banners ── */
         .banner {
             padding: 10px 14px;
@@ -462,6 +531,7 @@
     <!-- ── Nav tabs ── -->
     <nav>
         <button class="tab active" data-tab="agent">🤖 AI AGENT</button>
+        <button class="tab" data-tab="perps">📈 PERPS</button>
         <button class="tab" data-tab="docs">📚 DOCS</button>
         <button class="tab" data-tab="stats">📊 STATS</button>
         <button class="tab" data-tab="config">⚙️ CONFIG</button>
@@ -541,6 +611,10 @@ function renderTab(tab) {
         sidebar.innerHTML = buildSidebar();
         bindChatEvents();
         scrollChatToBottom();
+    } else if (tab === 'perps') {
+        content.innerHTML = buildPerpsTab();
+        sidebar.innerHTML = buildPerpsSidebar();
+        loadPerpsData();
     } else if (tab === 'docs') {
         content.innerHTML = buildDocsTab();
         sidebar.innerHTML = '';
@@ -811,6 +885,241 @@ document.getElementById('sidebar').addEventListener('click', e => {
 });
 
 // ─────────────────────────────────────────────────
+// PERPS tab
+// ─────────────────────────────────────────────────
+let perpsData = null;   // {tickers, markets}
+let perpsSymbol = 'SOL';
+let perpsBook = null;   // orderbook
+let perpsCandles = [];  // candle array
+
+function buildPerpsTab() {
+    return `
+    <div class="panel">
+        <div class="panel-header">
+            <div class="panel-title">📈 Phoenix Perpetuals — Live Markets</div>
+            <button class="act-btn" style="padding:5px 14px;font-size:11px;" onclick="loadPerpsData()">⟳ REFRESH</button>
+        </div>
+        <div id="perpsMarketsBody">
+            <div style="color:var(--dim);font-size:12px;padding:20px 0;text-align:center;">
+                <span class="spinner"></span>  Loading market data…
+            </div>
+        </div>
+    </div>
+    <div class="panel" id="perpsDetailPanel" style="display:none;">
+        <div class="panel-header">
+            <div class="panel-title" id="perpsDetailTitle">📊 SOL — Orderbook & Candles</div>
+        </div>
+        <div class="ob-grid" id="perpsObGrid"></div>
+        <div style="margin-top:16px;">
+            <div style="font-size:11px;color:var(--dim);letter-spacing:.08em;">1H CANDLES (24)</div>
+            <div class="candle-bar-wrap" id="perpsCandleBar"></div>
+        </div>
+    </div>`;
+}
+
+function buildPerpsSidebar() {
+    const PERPS_EXAMPLES = [
+        { label: '🟢 SOL', sym: 'SOL' },
+        { label: '🟡 BTC', sym: 'BTC' },
+        { label: '🔵 ETH', sym: 'ETH' },
+        { label: '🟣 SUI', sym: 'SUI' },
+        { label: '🐶 DOGE', sym: 'DOGE' },
+        { label: '💨 FARTCOIN', sym: 'FARTCOIN' },
+        { label: '🪐 JUP', sym: 'JUP' },
+        { label: '🔥 HYPE', sym: 'HYPE' },
+    ];
+    return `
+    <div style="font-size:12px;color:var(--dim);margin-bottom:12px;letter-spacing:.08em;">📈 MARKETS</div>
+    ${PERPS_EXAMPLES.map(m => `
+    <div class="ex-card" onclick="selectPerpsSymbol('${m.sym}')" style="padding:9px 12px;">
+        <div class="ex-title" style="font-size:12px;">${m.label}</div>
+        <div id="sideTickerPrice_${m.sym}" style="font-size:11px;color:var(--text2);">—</div>
+    </div>`).join('')}
+    <div style="margin-top:12px;padding:10px;background:rgba(0,255,249,0.04);border:1px solid var(--border);border-radius:6px;font-size:10px;color:var(--dim);line-height:1.7;">
+        ⚡ Powered by Phoenix Perps<br>
+        Data via Vulcan CLI → HTTP fallback<br>
+        FIFO orderbook · Up to 50× leverage
+    </div>`;
+}
+
+function fmt(n, decimals=2) {
+    if (n == null || isNaN(n)) return '—';
+    return Number(n).toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+function fmtK(n) {
+    if (!n) return '—';
+    if (n >= 1e9) return '$' + fmt(n/1e9,2) + 'B';
+    if (n >= 1e6) return '$' + fmt(n/1e6,2) + 'M';
+    if (n >= 1e3) return '$' + fmt(n/1e3,2) + 'K';
+    return '$' + fmt(n,2);
+}
+
+function fmtFunding(rate) {
+    if (!rate) return '—';
+    const apr = rate * 24 * 365 * 100;
+    return (apr >= 0 ? '+' : '') + apr.toFixed(4) + '% APR';
+}
+
+function changeClass(pct) {
+    if (!pct) return 'neu';
+    return pct > 0 ? 'pos' : pct < 0 ? 'neg' : 'neu';
+}
+
+function renderMarketsTable(tickers) {
+    if (!tickers || tickers.length === 0) {
+        return '<div style="color:var(--pink);font-size:12px;padding:12px;">⚠️ No market data available. Is the server running?</div>';
+    }
+    const rows = tickers.map(t => {
+        const chg = t.change24hPct ?? 0;
+        const cls = changeClass(chg);
+        return `
+        <tr onclick="selectPerpsSymbol('${t.symbol}')" style="cursor:pointer;">
+            <td>${t.symbol}</td>
+            <td>$${fmt(t.markPrice, t.markPrice > 100 ? 2 : 4)}</td>
+            <td class="${cls}">${chg >= 0 ? '+' : ''}${fmt(chg,2)}%</td>
+            <td>${fmtK(t.volume24hUsd)}</td>
+            <td>${fmtK(t.openInterest * t.markPrice)}</td>
+            <td class="${t.fundingRate >= 0 ? 'pos' : 'neg'}">${fmtFunding(t.fundingRate)}</td>
+        </tr>`;
+    }).join('');
+
+    return `
+    <table class="perps-table">
+        <thead>
+            <tr>
+                <th>MARKET</th>
+                <th>MARK PRICE</th>
+                <th>24H %</th>
+                <th>24H VOLUME</th>
+                <th>OPEN INT.</th>
+                <th>FUNDING APR</th>
+            </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+    </table>
+    <div style="font-size:10px;color:var(--dim);margin-top:8px;">Click a row to view orderbook & candles</div>`;
+}
+
+async function loadPerpsData() {
+    const body = document.getElementById('perpsMarketsBody');
+    if (!body) return;
+    body.innerHTML = '<div style="color:var(--dim);font-size:12px;padding:20px 0;text-align:center;"><span class="spinner"></span>  Loading…</div>';
+
+    try {
+        const r = await fetch(API_BASE + '/api/perps/markets');
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        perpsData = await r.json();
+        body.innerHTML = renderMarketsTable(perpsData.tickers ?? []);
+
+        // Update sidebar prices
+        for (const t of (perpsData.tickers ?? [])) {
+            const el = document.getElementById(`sideTickerPrice_${t.symbol}`);
+            if (el) {
+                const chg = t.change24hPct ?? 0;
+                const cls = chg >= 0 ? 'pos' : 'neg';
+                el.innerHTML = `<span style="color:var(--cyan);">$${fmt(t.markPrice, t.markPrice > 100 ? 2 : 4)}</span> <span class="${cls}">${chg >= 0 ? '+' : ''}${fmt(chg,2)}%</span>`;
+            }
+        }
+    } catch (e) {
+        body.innerHTML = `<div class="banner error">⚠️ Failed to load markets: ${e.message}</div>`;
+    }
+}
+
+async function selectPerpsSymbol(sym) {
+    perpsSymbol = sym;
+    const panel = document.getElementById('perpsDetailPanel');
+    const title = document.getElementById('perpsDetailTitle');
+    const obGrid = document.getElementById('perpsObGrid');
+    const candleBar = document.getElementById('perpsCandleBar');
+    if (!panel || !title || !obGrid || !candleBar) return;
+
+    panel.style.display = 'block';
+    title.textContent = `📊 ${sym} — Orderbook & Candles`;
+    obGrid.innerHTML = '<div style="color:var(--dim);font-size:12px;"><span class="spinner"></span>  Loading orderbook…</div>';
+    candleBar.innerHTML = '';
+
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    // Load orderbook and candles in parallel
+    const [bookRes, candleRes] = await Promise.allSettled([
+        fetch(`${API_BASE}/api/perps/orderbook?symbol=${sym}&depth=8`).then(r => r.json()),
+        fetch(`${API_BASE}/api/perps/candles?symbol=${sym}&interval=1h&limit=24`).then(r => r.json()),
+    ]);
+
+    // Render orderbook
+    if (bookRes.status === 'fulfilled') {
+        perpsBook = bookRes.value;
+        obGrid.innerHTML = renderOrderbook(perpsBook);
+    } else {
+        obGrid.innerHTML = '<div style="color:var(--pink);font-size:12px;">⚠️ Orderbook unavailable</div>';
+    }
+
+    // Render candles
+    if (candleRes.status === 'fulfilled') {
+        perpsCandles = candleRes.value.candles ?? [];
+        candleBar.innerHTML = renderCandleBar(perpsCandles);
+    } else {
+        candleBar.innerHTML = '<div style="color:var(--dim);font-size:11px;">No candle data</div>';
+    }
+}
+
+function renderOrderbook(book) {
+    if (!book || (!book.bids?.length && !book.asks?.length)) {
+        return '<div style="color:var(--dim);font-size:12px;">No orderbook data</div>';
+    }
+    const bidsHtml = (book.bids ?? []).slice(0,8).map(l => `
+        <div class="ob-row">
+            <span class="ob-row-price">${fmt(l.price,4)}</span>
+            <span style="color:var(--text2);">${fmt(l.quantity,4)}</span>
+        </div>`).join('');
+
+    const asksHtml = (book.asks ?? []).slice(0,8).map(l => `
+        <div class="ob-row">
+            <span class="ob-row-price">${fmt(l.price,4)}</span>
+            <span style="color:var(--text2);">${fmt(l.quantity,4)}</span>
+        </div>`).join('');
+
+    const mid = book.midPrice ? `$${fmt(book.midPrice,4)}` : '—';
+    const spread = book.spread ? `${fmt(book.spread,4)}` : '—';
+
+    return `
+    <div class="ob-side ob-bid">
+        <div class="ob-side-title">🟢 BIDS (buy)</div>
+        ${bidsHtml || '<div style="color:var(--dim);font-size:11px;">none</div>'}
+    </div>
+    <div class="ob-side ob-ask">
+        <div class="ob-side-title">🔴 ASKS (sell)</div>
+        ${asksHtml || '<div style="color:var(--dim);font-size:11px;">none</div>'}
+    </div>
+    <div style="grid-column:span 2;padding-top:8px;font-size:11px;color:var(--dim);">
+        Mid: <span style="color:var(--cyan);">${mid}</span>
+        &nbsp;|&nbsp; Spread: <span style="color:var(--yellow);">${spread}</span>
+    </div>`;
+}
+
+function renderCandleBar(candles) {
+    if (!candles || candles.length === 0) return '<div style="color:var(--dim);font-size:11px;">No candle data</div>';
+    const highs = candles.map(c => Number(c.high) || 0);
+    const lows  = candles.map(c => Number(c.low)  || 0);
+    const maxH  = Math.max(...highs);
+    const minL  = Math.min(...lows);
+    const range = maxH - minL || 1;
+
+    return candles.map(c => {
+        const open  = Number(c.open)  || 0;
+        const close = Number(c.close) || 0;
+        const high  = Number(c.high)  || 0;
+        const low   = Number(c.low)   || 0;
+        const bull  = close >= open;
+        const heightPct = Math.max(((high - low) / range) * 100, 4);
+        const color = bull ? 'var(--green)' : 'var(--pink)';
+        const title = `O:${fmt(open,2)} H:${fmt(high,2)} L:${fmt(low,2)} C:${fmt(close,2)}\n${c.time ?? ''}`;
+        return `<div class="candle-bar" title="${title}" style="height:${heightPct}%;background:${color};opacity:0.8;"></div>`;
+    }).join('');
+}
+
+// ─────────────────────────────────────────────────
 // Docs tab
 // ─────────────────────────────────────────────────
 const DOCS = [
@@ -965,7 +1274,21 @@ function buildConfigTab() {
         <span class="${ok ? 'cfg-ok' : 'cfg-miss'}">${v}</span>
     </div>`;
 
-    const aiProvider = cfg.hasGoogleAI ? 'Google Gemini ✅' : cfg.hasXAI ? 'XAI Grok ✅' : cfg.hasRedPill ? 'RedPill ✅' : '❌ not configured';
+    let aiProvider;
+    if (cfg.hasGoogleAI) {
+        aiProvider = 'Google Gemini ✅';
+    } else if (cfg.hasXAI) {
+        aiProvider = 'XAI Grok ✅';
+    } else if (cfg.hasRedPill) {
+        const teeLabel = cfg.redpillTee ? ' 🔐 TEE' : '';
+        aiProvider = `RedPill ✅ — ${cfg.redpillModel ?? ''}${teeLabel}`;
+    } else {
+        aiProvider = '❌ not configured';
+    }
+
+    const redpillRow = cfg.hasRedPill
+        ? row('REDPILL MODEL', `${cfg.redpillModel ?? '—'}${cfg.redpillTee ? ' (GPU TEE 🔐)' : ''}`, true)
+        : row('REDPILL_API_KEY', '⚠️ optional — set REDPILL_MODEL for model choice', false);
 
     return `
     <div class="panel" style="max-width:700px;">
@@ -974,8 +1297,31 @@ function buildConfigTab() {
         ${row('NETWORK', cfg.network ?? 'devnet', true)}
         ${row('HELIUS_API_KEY', cfg.hasHelius ? '✅ configured' : '❌ missing (required)', cfg.hasHelius)}
         ${row('AI PROVIDER', aiProvider, cfg.hasGoogleAI || cfg.hasXAI || cfg.hasRedPill)}
+        ${redpillRow}
         ${row('JUPITER_API_KEY', cfg.hasJupiter ? '✅ configured' : '⚠️ optional', cfg.hasJupiter)}
         ${cfg.heliusRpcUrl ? row('HELIUS_RPC_URL', cfg.heliusRpcUrl, true) : ''}
+        ${row('PHOENIX PERPS', '✅ live (Vulcan CLI + HTTP fallback)', true)}
+    </div>
+    <div class="panel" style="max-width:700px;">
+        <div class="panel-header"><div class="panel-title">🔐 RedPill Privacy Gateway</div></div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.8;">
+            <p>RedPill routes all AI requests through a <strong style="color:var(--cyan);">TEE-protected gateway</strong>.</p>
+            <p style="margin-top:8px;">Available models:</p>
+            <div style="margin:8px 0 0 0;display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                ${[
+                    ['phala/qwen3.5-27b', '🔐 Phala GPU TEE'],
+                    ['z-ai/glm-5.1', '🔐 Chutes GPU TEE'],
+                    ['z-ai/glm-5', '🔐 Near AI GPU TEE'],
+                    ['anthropic/claude-sonnet-4.5', '🤖 Claude Sonnet'],
+                    ['openai/gpt-5', '🤖 GPT-5'],
+                    ['openai/gpt-5-mini', '🤖 GPT-5 Mini'],
+                ].map(([m, l]) => `<div style="background:rgba(0,0,0,0.3);padding:5px 8px;border-radius:4px;border:1px solid var(--border);">
+                    <div style="color:var(--cyan);font-size:10px;">${l}</div>
+                    <div style="color:var(--dim);font-size:10px;">${m}</div>
+                </div>`).join('')}
+            </div>
+            <p style="margin-top:10px;color:var(--dim);font-size:11px;">Set <code>REDPILL_MODEL=phala/qwen3.5-27b</code> in .env for TEE inference, or <code>REDPILL_TEE=1</code> to auto-select.</p>
+        </div>
     </div>
     <div class="panel" style="max-width:700px;">
         <div class="panel-header"><div class="panel-title">📋 Setup Instructions</div></div>

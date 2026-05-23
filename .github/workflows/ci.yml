@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ─── SDK build + type-check ──────────────────────────────────────────────────
+  sdk:
+    name: SDK — build & type-check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/sdk
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: packages/sdk/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (tsc + rollup)
+        run: npm run build
+
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdk-dist
+          path: packages/sdk/dist/
+
+  # ─── Anchor program build ────────────────────────────────────────────────────
+  anchor:
+    name: Anchor — build dark_protocol_program
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dark-protocol-program
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Solana CLI
+        run: |
+          sh -c "$(curl -sSfL https://release.solana.com/v1.18.20/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Install Anchor CLI
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor --tag v0.32.1 anchor-cli --locked
+        env:
+          CARGO_NET_GIT_FETCH_WITH_CLI: 'true'
+
+      - name: Cache Rust build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            dark-protocol-program/target
+          key: ${{ runner.os }}-anchor-${{ hashFiles('dark-protocol-program/Cargo.lock') }}
+
+      - name: Build Anchor program
+        run: anchor build
+
+      - name: Verify IDL generated
+        run: test -f target/idl/dark_protocol_program.json
+
+      - name: Upload .so artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dark-protocol-program
+          path: dark-protocol-program/target/deploy/dark_protocol_program.so
+
+  # ─── darkswap Next.js app ────────────────────────────────────────────────────
+  darkswap:
+    name: DarkSwap — Next.js build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: darkswap
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: darkswap/package-lock.json
+
+      - name: Install
+        run: npm ci --legacy-peer-deps
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_PROGRAM_ID: 'E8zL7h9qHjC7sMf2WCYhdqS5iLkYhPJ9yAhTfevo74jm'
+          SKIP_ENV_VALIDATION: 'true'

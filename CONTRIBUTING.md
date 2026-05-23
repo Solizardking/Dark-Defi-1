@@ -1,6 +1,24 @@
-# Contributing to Dark DeFi Terminal
+# Contributing to Dark DeFi 🦞
+
+> *"Cypherpunks write code."* — Eric Hughes, 1993
 
 Thanks for your interest. This is alpha software dealing with cryptography and value transfer — please be deliberate.
+
+## Project layout
+
+```
+Dark-Defi/
+├── dark-protocol-program/   # Anchor/Rust — on-chain shielded note pool
+│   ├── programs/dark-protocol-program/src/lib.rs
+│   ├── deploy-devnet.sh     # devnet deploy (needs ≥ 3 SOL devnet)
+│   └── deploy-mainnet.sh    # mainnet deploy (needs ≥ 3 SOL mainnet)
+├── packages/
+│   ├── sdk/                 # @openclawdsol/dark-protocol-sdk (npm published)
+│   ├── terminal/            # x402 dark terminal CLI
+│   ├── tee-agents/          # TEE-isolated AI agents + SAS attestation
+│   └── sas-lib/             # Solana Attestation Service client
+└── darkswap/                # DarkSwap Next.js app (Vercel-ready)
+```
 
 ## Ground rules
 
@@ -11,10 +29,18 @@ Thanks for your interest. This is alpha software dealing with cryptography and v
 ## Getting started
 
 ```bash
-git clone https://github.com/8bitsats/darkterminal.git
-cd darkterminal
+git clone https://github.com/8bitsats/Dark-Defi.git
+cd Dark-Defi
 npm install
-npm run build
+
+# Build the SDK
+cd packages/sdk && npm run build && cd ../..
+
+# Build the Anchor program (requires Solana + Anchor CLI)
+cd dark-protocol-program && anchor build && cd ..
+
+# Run the DarkSwap dev UI
+cd darkswap && npm install && npm run dev  # → http://localhost:3333
 ```
 
 Set up your local secrets:

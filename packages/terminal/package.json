@@ -16,7 +16,10 @@
     "clean": "rm -rf dist",
     "terminal": "npm run dev",
     "dashboard": "npm run build && node dist/terminal/x402-token-dashboard.js",
-    "x402": "npm run dashboard"
+    "clawd": "npm run dashboard",
+    "x402": "npm run dashboard",
+    "serve": "ts-node --transpile-only local-server.ts",
+    "serve:open": "ts-node --transpile-only local-server.ts & sleep 2 && open http://localhost:3333"
   },
   "keywords": [
     "defi",

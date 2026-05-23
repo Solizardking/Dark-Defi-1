@@ -1,7 +1,9 @@
 /**
- * X402 Token Dashboard
+ * CLAWD Token Dashboard
  * Real-time streaming DEX and charting system
- * 
+ *
+ * Token: CLAWD (8cHzQHUS2s2h8TzCmfqPKYiM4dSt4roa3n7MyRLApump)
+ *
  * Features:
  * - Live price updates via Birdeye WebSocket
  * - TradingView charting integration
@@ -16,18 +18,23 @@ import ora from 'ora';
 import Table from 'cli-table3';
 import WebSocket from 'ws';
 import axios from 'axios';
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { Connection } from '@solana/web3.js';
+import * as dotenv from 'dotenv';
+import { resolve } from 'node:path';
+dotenv.config({ path: resolve(__dirname, '.env') });
+dotenv.config();
 
-// Configuration
+// Configuration — all values can be overridden via .env
 const BIRDEYE_API_KEY = process.env.BIRDEYE_API_KEY || '';
 const CONFIG = {
   BIRDEYE_API_KEY,
   BIRDEYE_WSS_URL: `wss://public-api.birdeye.so/socket/solana?x-api-key=${BIRDEYE_API_KEY}`,
   BIRDEYE_API_URL: 'https://public-api.birdeye.so',
-  TOKEN_ADDRESS: '6H8uyJYrPVcra6Fi7iWh29DXSm8KctzhHRyXmPwKpump',
-  TOKEN_SYMBOL: 'X402',
+  // Default: CLAWD token — override with TOKEN_ADDRESS= in .env
+  TOKEN_ADDRESS: process.env.TOKEN_ADDRESS || '8cHzQHUS2s2h8TzCmfqPKYiM4dSt4roa3n7MyRLApump',
+  TOKEN_SYMBOL: process.env.TOKEN_SYMBOL || 'CLAWD',
   HELIUS_RPC_URL: process.env.HELIUS_RPC_URL || 'https://mainnet.helius-rpc.com/?api-key=',
-  CHART_INTERVAL: '1m', // 1s, 15s, 30s, 1m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M
+  CHART_INTERVAL: process.env.CHART_INTERVAL || '1m', // 1s, 15s, 30s, 1m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M
 };
 
 // Interfaces
@@ -77,7 +84,7 @@ interface Trade {
   volumeUSD: number;
 }
 
-export class X402TokenDashboard {
+export class ClawdTokenDashboard {
   private ws: WebSocket | null = null;
   private connection: Connection;
   private metadata: TokenMetadata | null = null;
@@ -97,7 +104,7 @@ export class X402TokenDashboard {
    * Initialize and start the dashboard
    */
   async start(): Promise<void> {
-    console.log(chalk.cyan('🚀 X402 Token Dashboard - Initializing...'));
+    console.log(chalk.cyan('🐾 CLAWD Token Dashboard - Initializing...'));
     console.log(chalk.dim(`Token: ${CONFIG.TOKEN_SYMBOL} (${CONFIG.TOKEN_ADDRESS})`));
     console.log(chalk.dim('─'.repeat(80)));
 
@@ -452,101 +459,103 @@ export class X402TokenDashboard {
     this.displayDashboard();
   }
 
+  /** Render the token info section */
+  private renderTokenInfo(): void {
+    if (!this.metadata) return;
+    console.log(chalk.white.bold('\n📊 TOKEN INFORMATION'));
+    console.log(chalk.dim('─'.repeat(80)));
+    console.log(chalk.white(`  Name:        ${this.metadata.name}`));
+    console.log(chalk.white(`  Symbol:      ${this.metadata.symbol}`));
+    console.log(chalk.white(`  Address:     ${this.metadata.address}`));
+    console.log(chalk.white(`  Decimals:    ${this.metadata.decimals}`));
+    if (this.metadata.extensions?.description) {
+      console.log(chalk.dim(`  Description: ${this.metadata.extensions.description.substring(0, 100)}...`));
+    }
+  }
+
+  /** Render the market stats section */
+  private renderMarketStats(): void {
+    if (!this.stats) return;
+    console.log(chalk.white.bold('\n💰 MARKET STATISTICS'));
+    console.log(chalk.dim('─'.repeat(80)));
+    const priceColor = this.stats.priceChange24h >= 0 ? chalk.green : chalk.red;
+    const sign = this.stats.priceChange24h >= 0 ? '+' : '';
+    const priceChange = `${sign}${this.stats.priceChange24h.toFixed(2)}%`;
+    console.log(chalk.white(`  Price:       $${this.stats.price.toFixed(8)} ${priceColor(priceChange)}`));
+    console.log(chalk.white(`  Market Cap:  $${this.formatNumber(this.stats.marketCap)}`));
+    console.log(chalk.white(`  24h Volume:  $${this.formatNumber(this.stats.volume24h)}`));
+    console.log(chalk.white(`  Liquidity:   $${this.formatNumber(this.stats.liquidity)}`));
+    console.log(chalk.white(`  Holders:     ${this.formatNumber(this.stats.holders)}`));
+    console.log(chalk.white(`  Last Trade:  ${this.stats.lastTradeTime}`));
+  }
+
+  /** Render the top holders table */
+  private renderHolders(): void {
+    if (this.holders.length === 0) return;
+    console.log(chalk.white.bold('\n👥 TOP HOLDERS'));
+    console.log(chalk.dim('─'.repeat(80)));
+    const table = new Table({
+      head: ['Rank', 'Address', 'Amount', '% of Supply'],
+      colWidths: [6, 46, 18, 14],
+    });
+    let idx = 0;
+    for (const holder of this.holders.slice(0, 5)) {
+      idx++;
+      table.push([
+        `#${idx}`,
+        `${holder.owner.substring(0, 8)}...${holder.owner.substring(holder.owner.length - 8)}`,
+        this.formatNumber(holder.uiAmount),
+        `${holder.percentage.toFixed(2)}%`,
+      ]);
+    }
+    console.log(table.toString());
+  }
+
+  /** Render the recent trades table */
+  private renderTrades(): void {
+    if (this.recentTrades.length === 0) return;
+    console.log(chalk.white.bold('\n🔄 RECENT TRADES'));
+    console.log(chalk.dim('─'.repeat(80)));
+    const table = new Table({
+      head: ['Time', 'Side', 'Price', 'Volume', 'TX'],
+      colWidths: [20, 8, 16, 16, 22],
+    });
+    for (const trade of this.recentTrades.slice(0, 5)) {
+      const time = new Date(trade.blockTime * 1000).toLocaleTimeString();
+      const sideColor = trade.side === 'buy' ? chalk.green : chalk.red;
+      table.push([
+        time,
+        sideColor(trade.side.toUpperCase()),
+        `$${trade.priceUSD.toFixed(8)}`,
+        `$${this.formatNumber(trade.volumeUSD)}`,
+        `${trade.txHash.substring(0, 8)}...`,
+      ]);
+    }
+    console.log(table.toString());
+  }
+
   /**
    * Display dashboard in terminal
    */
   private displayDashboard(): void {
-    // Clear console
     console.clear();
-
     console.log(chalk.cyan.bold('\n╔════════════════════════════════════════════════════════════════════════╗'));
-    console.log(chalk.cyan.bold('║           X402 TOKEN DASHBOARD - REAL-TIME DEX ANALYTICS               ║'));
+    console.log(chalk.cyan.bold('║          CLAWD TOKEN DASHBOARD - REAL-TIME DEX ANALYTICS  🐾           ║'));
     console.log(chalk.cyan.bold('╚════════════════════════════════════════════════════════════════════════╝'));
 
-    // Token Info
-    if (this.metadata) {
-      console.log(chalk.white.bold('\n📊 TOKEN INFORMATION'));
-      console.log(chalk.dim('─'.repeat(80)));
-      console.log(chalk.white(`  Name:        ${this.metadata.name}`));
-      console.log(chalk.white(`  Symbol:      ${this.metadata.symbol}`));
-      console.log(chalk.white(`  Address:     ${this.metadata.address}`));
-      console.log(chalk.white(`  Decimals:    ${this.metadata.decimals}`));
-      if (this.metadata.extensions?.description) {
-        console.log(chalk.dim(`  Description: ${this.metadata.extensions.description.substring(0, 100)}...`));
-      }
-    }
+    this.renderTokenInfo();
+    this.renderMarketStats();
 
-    // Market Stats
-    if (this.stats) {
-      console.log(chalk.white.bold('\n💰 MARKET STATISTICS'));
-      console.log(chalk.dim('─'.repeat(80)));
-      
-      const priceColor = this.stats.priceChange24h >= 0 ? chalk.green : chalk.red;
-      const priceChange = this.stats.priceChange24h >= 0 
-        ? `+${this.stats.priceChange24h.toFixed(2)}%` 
-        : `${this.stats.priceChange24h.toFixed(2)}%`;
-
-      console.log(chalk.white(`  Price:       $${this.stats.price.toFixed(8)} ${priceColor(priceChange)}`));
-      console.log(chalk.white(`  Market Cap:  $${this.formatNumber(this.stats.marketCap)}`));
-      console.log(chalk.white(`  24h Volume:  $${this.formatNumber(this.stats.volume24h)}`));
-      console.log(chalk.white(`  Liquidity:   $${this.formatNumber(this.stats.liquidity)}`));
-      console.log(chalk.white(`  Holders:     ${this.formatNumber(this.stats.holders)}`));
-      console.log(chalk.white(`  Last Trade:  ${this.stats.lastTradeTime}`));
-    }
-
-    // Price Chart (ASCII)
     if (this.ohlcvData.length > 0) {
       console.log(chalk.white.bold('\n📈 PRICE CHART (Recent Candles)'));
       console.log(chalk.dim('─'.repeat(80)));
       this.displayASCIIChart();
     }
 
-    // Top Holders
-    if (this.holders.length > 0) {
-      console.log(chalk.white.bold('\n👥 TOP HOLDERS'));
-      console.log(chalk.dim('─'.repeat(80)));
-      const holderTable = new Table({
-        head: ['Rank', 'Address', 'Amount', '% of Supply'],
-        colWidths: [6, 46, 18, 14],
-      });
+    this.renderHolders();
+    this.renderTrades();
 
-      this.holders.slice(0, 5).forEach((holder, index) => {
-        holderTable.push([
-          `#${index + 1}`,
-          `${holder.owner.substring(0, 8)}...${holder.owner.substring(holder.owner.length - 8)}`,
-          this.formatNumber(holder.uiAmount),
-          `${holder.percentage.toFixed(2)}%`,
-        ]);
-      });
-
-      console.log(holderTable.toString());
-    }
-
-    // Recent Trades
-    if (this.recentTrades.length > 0) {
-      console.log(chalk.white.bold('\n🔄 RECENT TRADES'));
-      console.log(chalk.dim('─'.repeat(80)));
-      const tradeTable = new Table({
-        head: ['Time', 'Side', 'Price', 'Volume', 'TX'],
-        colWidths: [20, 8, 16, 16, 22],
-      });
-
-      this.recentTrades.slice(0, 5).forEach((trade) => {
-        const time = new Date(trade.blockTime * 1000).toLocaleTimeString();
-        const sideColor = trade.side === 'buy' ? chalk.green : chalk.red;
-        tradeTable.push([
-          time,
-          sideColor(trade.side.toUpperCase()),
-          `$${trade.priceUSD.toFixed(8)}`,
-          `$${this.formatNumber(trade.volumeUSD)}`,
-          `${trade.txHash.substring(0, 8)}...`,
-        ]);
-      });
-
-      console.log(tradeTable.toString());
-    }
-
-    console.log(chalk.dim('\n' + '─'.repeat(80)));
+    console.log(chalk.dim(`\n${'─'.repeat(80)}`));
     console.log(chalk.cyan('💡 Real-time updates via Birdeye WebSocket'));
     console.log(chalk.dim(`Last updated: ${new Date().toLocaleTimeString()}`));
     console.log(chalk.dim('\nPress Ctrl+C to exit\n'));
@@ -605,9 +614,10 @@ export class X402TokenDashboard {
    * Get TradingView datafeed configuration
    * This can be used to integrate with TradingView charting library
    */
-  public getTradingViewDatafeed(): any {
+  public getTradingViewDatafeed(): Record<string, unknown> {
+    type AnyFn = (...args: unknown[]) => unknown;
     return {
-      onReady: (callback: Function) => {
+      onReady: (callback: AnyFn) => {
         setTimeout(() => callback({
           supported_resolutions: ['1S', '15S', '30S', '1', '5', '15', '30', '60', '120', '240', 'D'],
           exchanges: [{ value: 'Solana', name: 'Solana', desc: 'Solana DEXs' }],
@@ -615,27 +625,27 @@ export class X402TokenDashboard {
         }), 0);
       },
 
-      searchSymbols: (userInput: string, exchange: string, symbolType: string, onResult: Function) => {
+      searchSymbols: (_userInput: string, _exchange: string, _symbolType: string, onResult: AnyFn) => {
         onResult([{
           symbol: CONFIG.TOKEN_SYMBOL,
           full_name: `Solana:${CONFIG.TOKEN_SYMBOL}`,
-          description: this.metadata?.name || CONFIG.TOKEN_SYMBOL,
+          description: this.metadata?.name ?? CONFIG.TOKEN_SYMBOL,
           exchange: 'Solana',
           type: 'token',
         }]);
       },
 
-      resolveSymbol: (symbolName: string, onResolve: Function, onError: Function) => {
+      resolveSymbol: (_symbolName: string, onResolve: AnyFn, _onError: AnyFn) => {
         const symbolInfo = {
           name: CONFIG.TOKEN_SYMBOL,
-          description: this.metadata?.name || CONFIG.TOKEN_SYMBOL,
+          description: this.metadata?.name ?? CONFIG.TOKEN_SYMBOL,
           type: 'token',
           session: '24x7',
           timezone: 'Etc/UTC',
           ticker: CONFIG.TOKEN_SYMBOL,
           exchange: 'Solana',
           minmov: 1,
-          pricescale: 100000000,
+          pricescale: 100_000_000,
           has_intraday: true,
           has_seconds: true,
           seconds_multipliers: ['1', '15', '30'],
@@ -647,11 +657,11 @@ export class X402TokenDashboard {
       },
 
       getBars: async (
-        symbolInfo: any,
-        resolution: string,
-        periodParams: any,
-        onResult: Function,
-        onError: Function
+        _symbolInfo: unknown,
+        _resolution: string,
+        periodParams: { from: number; to: number },
+        onResult: AnyFn,
+        onError: AnyFn
       ) => {
         try {
           const bars = this.ohlcvData
@@ -664,25 +674,23 @@ export class X402TokenDashboard {
               close: c.close,
               volume: c.volume,
             }));
-          
           onResult(bars, { noData: bars.length === 0 });
-        } catch (error: any) {
+        } catch (error: unknown) {
           onError(error);
         }
       },
 
       subscribeBars: (
-        symbolInfo: any,
-        resolution: string,
-        onTick: Function,
-        listenerGuid: string,
-        onResetCacheNeededCallback: Function
+        _symbolInfo: unknown,
+        _resolution: string,
+        _onTick: AnyFn,
+        _listenerGuid: string,
+        _onResetCacheNeededCallback: AnyFn
       ) => {
         // Real-time updates handled via WebSocket
-        // When new price data arrives, call onTick with the new bar
       },
 
-      unsubscribeBars: (listenerGuid: string) => {
+      unsubscribeBars: (_listenerGuid: string) => {
         // Cleanup if needed
       },
     };
@@ -710,7 +718,7 @@ export class X402TokenDashboard {
 
 // CLI entry point
 if (require.main === module) {
-  const dashboard = new X402TokenDashboard();
+  const dashboard = new ClawdTokenDashboard();
   
   // Handle graceful shutdown
   process.on('SIGINT', () => {
@@ -724,4 +732,6 @@ if (require.main === module) {
   });
 }
 
-export default X402TokenDashboard;
+// Keep backward-compatible alias
+export { ClawdTokenDashboard as X402TokenDashboard };
+export default ClawdTokenDashboard;

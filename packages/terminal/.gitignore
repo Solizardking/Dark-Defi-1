@@ -1,0 +1,54 @@
+# ============================================================
+# SECURITY: Never commit secrets or credentials
+# ============================================================
+
+# Environment files with real API keys — NEVER commit these
+.env
+.env.local
+.env.*.local
+*.env
+
+# The .env.example file is safe to commit (has no real keys)
+!.env.example
+
+# Wallet keypairs — NEVER commit private keys
+*-keypair.json
+id.json
+wallet.json
+*.json.key
+
+# API credential files
+client_secret_*.json
+x402-*.json
+*-credentials.json
+*.key
+
+# ============================================================
+# Build outputs
+# ============================================================
+dist/
+build/
+*.tsbuildinfo
+*.js.map
+
+# ============================================================
+# Dependencies
+# ============================================================
+node_modules/
+.npm/
+
+# ============================================================
+# Logs
+# ============================================================
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# ============================================================
+# OS / Editor
+# ============================================================
+.DS_Store
+.idea/
+.vscode/
+*.swp
+Thumbs.db

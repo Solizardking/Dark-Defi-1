@@ -130,6 +130,7 @@ export function DarkSwap() {
   const [progressStep, setProgressStep] = useState<ProgressStep>("idle");
   const [showBurst, setShowBurst] = useState(false);
   const [swapArrowFlipped, setSwapArrowFlipped] = useState(false);
+  const [walletUiReady, setWalletUiReady] = useState(false);
 
   const recordSwap = useMutation(api.swaps.recordSwap);
   const quoteSourceRef = useRef<string>("jupiter");
@@ -222,6 +223,11 @@ export function DarkSwap() {
 
   useEffect(() => {
     return () => quoteAbortRef.current?.abort();
+  }, []);
+
+  useEffect(() => {
+    const id = setTimeout(() => setWalletUiReady(true), 0);
+    return () => clearTimeout(id);
   }, []);
 
   // Quote age counter
@@ -577,9 +583,19 @@ export function DarkSwap() {
 
           {/* Connect wallet (disconnected state — standalone, never nested in button) */}
           {!connected && (
-            <WalletMultiButton
-              className="mt-4 w-full !py-3.5 !rounded-xl !text-sm !font-bold !tracking-wider swap-btn-ready !justify-center !h-auto"
-            />
+            walletUiReady ? (
+              <WalletMultiButton
+                className="mt-4 w-full !py-3.5 !rounded-xl !text-sm !font-bold !tracking-wider swap-btn-ready !justify-center !h-auto"
+              />
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="mt-4 w-full py-3.5 rounded-xl text-sm font-bold tracking-wider swap-btn-ready justify-center h-auto opacity-60 cursor-not-allowed"
+              >
+                Select Wallet
+              </button>
+            )
           )}
 
           {/* Swap button (connected state only) */}

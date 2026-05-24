@@ -4,6 +4,32 @@ import { getJupiterPrice } from "@/lib/jupiter";
 
 const BIRDEYE_BASE = "https://public-api.birdeye.so";
 const REQUEST_TIMEOUT_MS = 4_000;
+const SOLANA_RPC_URL = "https://api.mainnet-beta.solana.com";
+
+async function getTokenDecimals(mint: string): Promise<number> {
+  const known = getTokenByAddress(mint)?.decimals;
+  if (known !== undefined) return known;
+
+  try {
+    const res = await fetch(SOLANA_RPC_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "getAccountInfo",
+        params: [mint, { encoding: "jsonParsed" }],
+      }),
+      next: { revalidate: 60 },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+    if (!res.ok) return 6;
+    const data = await res.json();
+    return Number(data?.result?.value?.data?.parsed?.info?.decimals ?? 6);
+  } catch {
+    return 6;
+  }
+}
 
 export async function fetchBirdeyePrice(
   mint: string,
@@ -76,13 +102,15 @@ export async function validateOraclePrice(
     };
   }
 
-  const inputDecimals = getTokenByAddress(quote.inputMint)?.decimals ?? 6;
-  const outputDecimals = getTokenByAddress(quote.outputMint)?.decimals ?? 6;
+  const [inputDecimals, outputDecimals] = await Promise.all([
+    getTokenDecimals(quote.inputMint),
+    getTokenDecimals(quote.outputMint),
+  ]);
 
   const inAmountNorm = Number(quote.inAmount) / Math.pow(10, inputDecimals);
   const outAmountNorm = Number(quote.outAmount) / Math.pow(10, outputDecimals);
 
-  const jupiterRate = (inAmountNorm * inputPrice) / (outAmountNorm * outputPrice);
+  const jupiterRate = outAmountNorm / inAmountNorm;
   const oracleRate = inputPrice / outputPrice;
 
   const deviation = Math.abs((jupiterRate - oracleRate) / oracleRate) * 100;

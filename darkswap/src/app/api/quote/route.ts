@@ -136,7 +136,7 @@ export async function GET(req: NextRequest) {
     const { quote, source, router } = await getBestQuote(inputMint, outputMint, amount, slippageBps);
 
     const [oracle, safety] = await Promise.all([
-      skipOracle ? Promise.resolve(null) : validateOraclePrice(quote, 2.0, process.env.BIRDEYE_API_KEY),
+      skipOracle ? Promise.resolve(null) : validateOraclePrice(quote, 5.0, process.env.BIRDEYE_API_KEY),
       skipSafety ? Promise.resolve(null) : checkTokenSafety(inputMint, outputMint),
     ]);
 

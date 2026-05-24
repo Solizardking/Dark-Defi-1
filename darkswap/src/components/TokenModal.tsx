@@ -45,10 +45,14 @@ export function TokenModal({ open, onClose, onSelect, excludeMint }: Props) {
   }, [query, search]);
 
   useEffect(() => {
-    if (open) {
+    if (!open) return undefined;
+
+    const id = setTimeout(() => {
       setQuery("");
       setResults(POPULAR_TOKENS.filter((t) => t.address !== excludeMint));
-    }
+    }, 0);
+
+    return () => clearTimeout(id);
   }, [open, excludeMint]);
 
   if (!open) return null;

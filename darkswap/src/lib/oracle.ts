@@ -1,7 +1,9 @@
 import type { OraclePrice, OracleValidation, SwapQuote } from "@/types";
+import { getTokenByAddress } from "@/lib/tokens";
 
 const BIRDEYE_BASE = "https://public-api.birdeye.so";
 const JUP_PRICE_BASE = "https://price.jup.ag/v4";
+const REQUEST_TIMEOUT_MS = 4_000;
 
 export async function fetchBirdeyePrice(
   mint: string,
@@ -13,7 +15,7 @@ export async function fetchBirdeyePrice(
 
     const res = await fetch(
       `${BIRDEYE_BASE}/defi/price?address=${mint}`,
-      { headers, next: { revalidate: 10 } }
+      { headers, next: { revalidate: 10 }, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) }
     );
     if (!res.ok) return null;
     const data = await res.json();
@@ -27,6 +29,7 @@ export async function fetchJupiterPrice(mint: string): Promise<number | null> {
   try {
     const res = await fetch(`${JUP_PRICE_BASE}/price?ids=${mint}`, {
       next: { revalidate: 10 },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
     if (!res.ok) return null;
     const data = await res.json();
@@ -78,8 +81,8 @@ export async function validateOraclePrice(
     };
   }
 
-  const inputDecimals = quote.inputMint === "So11111111111111111111111111111111111111112" ? 9 : 6;
-  const outputDecimals = quote.outputMint === "So11111111111111111111111111111111111111112" ? 9 : 6;
+  const inputDecimals = getTokenByAddress(quote.inputMint)?.decimals ?? 6;
+  const outputDecimals = getTokenByAddress(quote.outputMint)?.decimals ?? 6;
 
   const inAmountNorm = Number(quote.inAmount) / Math.pow(10, inputDecimals);
   const outAmountNorm = Number(quote.outAmount) / Math.pow(10, outputDecimals);

@@ -38,6 +38,15 @@ const STEPS: Step[] = [
   },
 ];
 
+const BURST_PARTICLES = Array.from({ length: 20 }, (_, i) => ({
+  id: i,
+  color: i % 3 === 0 ? "#00f5ff" : i % 3 === 1 ? "#a855f7" : "#00ff88",
+  angle: (i / 20) * 360,
+  distance: 44 + ((i * 37) % 56),
+  delay: ((i * 13) % 10) / 100,
+  size: 3 + (i % 5),
+}));
+
 type ProgressStep = "idle" | "quoting" | "signing" | "sending" | "confirming" | "success" | "error";
 
 interface Props {
@@ -232,17 +241,9 @@ export function SwapProgress({ status, progressStep, error, txSignature }: Props
 
 /* Burst of particles on success */
 export function SuccessBurst() {
-  const particles = Array.from({ length: 20 }, (_, i) => ({
-    id: i,
-    color: i % 3 === 0 ? "#00f5ff" : i % 3 === 1 ? "#a855f7" : "#00ff88",
-    angle: (i / 20) * 360,
-    distance: 40 + Math.random() * 60,
-    size: 3 + Math.random() * 5,
-  }));
-
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {particles.map((p) => {
+      {BURST_PARTICLES.map((p) => {
         const rad = (p.angle * Math.PI) / 180;
         const tx = Math.cos(rad) * p.distance;
         const ty = Math.sin(rad) * p.distance;
@@ -251,7 +252,7 @@ export function SuccessBurst() {
             key={p.id}
             initial={{ opacity: 1, x: 0, y: 0, scale: 1 }}
             animate={{ opacity: 0, x: tx, y: ty, scale: 0 }}
-            transition={{ duration: 0.7, ease: "easeOut", delay: Math.random() * 0.1 }}
+            transition={{ duration: 0.7, ease: "easeOut", delay: p.delay }}
             style={{
               position: "absolute",
               top: "50%",

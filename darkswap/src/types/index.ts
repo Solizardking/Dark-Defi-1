@@ -109,6 +109,23 @@ export interface SwapApiResponse {
   error?: string;
 }
 
+export interface RecordedSwapInput {
+  walletAddress: string;
+  inputMint: string;
+  outputMint: string;
+  inputSymbol: string;
+  outputSymbol: string;
+  inputAmount: string;
+  outputAmount: string;
+  txSignature: string;
+  slippageBps: number;
+  priceImpactPct: string;
+  source: string;
+  route: string;
+  privacyEnabled: boolean;
+  ephemeralEnabled: boolean;
+}
+
 export interface ExecuteApiResponse {
   status: "Success" | "Failed";
   signature: string;

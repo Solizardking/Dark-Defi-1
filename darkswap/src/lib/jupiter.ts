@@ -10,6 +10,7 @@ const JUP_V1 =
 // ── v2 Meta-Aggregator — order+execute flow ───────────────────────────────────
 
 const JUP_V2 = "https://api.jup.ag/swap/v2";
+const REQUEST_TIMEOUT_MS = 8_000;
 
 function jupHeaders(): HeadersInit {
   const h: HeadersInit = { "Content-Type": "application/json" };
@@ -71,6 +72,7 @@ export async function getJupiterQuote(
   const res = await fetch(`${JUP_V1}/quote?${params}`, {
     headers: jupHeaders(),
     next: { revalidate: 0 },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
 
   if (!res.ok) {
@@ -97,6 +99,7 @@ export async function getJupiterOrder(
   const res = await fetch(`${JUP_V2}/order?${params}`, {
     headers: jupHeaders(),
     next: { revalidate: 0 },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
 
   if (!res.ok) {
@@ -137,6 +140,7 @@ export async function executeJupiterOrder(
     method: "POST",
     headers: jupHeaders(),
     body: JSON.stringify({ signedTransaction, requestId }),
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
 
   if (!res.ok) {
@@ -171,6 +175,7 @@ export async function getJupiterSwapTransaction(
     method: "POST",
     headers: jupHeaders(),
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
 
   if (!res.ok) {
@@ -183,7 +188,9 @@ export async function getJupiterSwapTransaction(
 
 export async function getJupiterPrice(mints: string[]): Promise<Record<string, number>> {
   const ids = mints.join(",");
-  const res = await fetch(`https://price.jup.ag/v4/price?ids=${ids}`);
+  const res = await fetch(`https://price.jup.ag/v4/price?ids=${ids}`, {
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
   if (!res.ok) return {};
   const data = await res.json();
   const prices: Record<string, number> = {};

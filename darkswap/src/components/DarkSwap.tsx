@@ -25,7 +25,15 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
 import { WSOL, USDC, formatAmount, parseAmount } from "@/lib/tokens";
-import type { Token, SwapState, QuoteApiResponse, SwapApiResponse, ExecuteApiResponse, ProgressStep } from "@/types";
+import type {
+  Token,
+  SwapState,
+  QuoteApiResponse,
+  SwapApiResponse,
+  ExecuteApiResponse,
+  ProgressStep,
+  RecordedSwapInput,
+} from "@/types";
 
 const SLIPPAGE_OPTIONS = [10, 50, 100, 200];
 
@@ -67,13 +75,7 @@ async function executeViaRpc(signed: VersionedTransaction, connection: Connectio
   return sig;
 }
 
-type RecordSwapFn = (args: {
-  walletAddress: string; inputMint: string; outputMint: string;
-  inputSymbol: string; outputSymbol: string; inputAmount: string;
-  outputAmount: string; txSignature: string; slippageBps: number;
-  priceImpactPct: string; source: string; route: string;
-  privacyEnabled: boolean; ephemeralEnabled: boolean;
-}) => Promise<unknown>;
+type RecordSwapFn = (args: RecordedSwapInput) => Promise<unknown>;
 
 function persistSwap(fn: RecordSwapFn, sig: string, router: string, state: SwapState, walletAddress: string, ephemeralEnabled: boolean) {
   const route = state.quote?.routePlan.map((r) => r.swapInfo.label).filter(Boolean).slice(0, 3).join(" → ") ?? "";
@@ -133,6 +135,7 @@ export function DarkSwap() {
   const quoteSourceRef = useRef<string>("jupiter");
 
   const quoteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const quoteAbortRef = useRef<AbortController | null>(null);
   const [quoteAge, setQuoteAge] = useState(0);
   const quoteTimestampRef = useRef<number>(0);
 
@@ -145,12 +148,19 @@ export function DarkSwap() {
     oracleEnabled: boolean,
     safetyCheckEnabled: boolean,
   ) => {
+    quoteAbortRef.current?.abort();
+    quoteAbortRef.current = null;
+
     if (!inputAmount || Number.parseFloat(inputAmount) <= 0) {
+      quoteTimestampRef.current = 0;
+      setQuoteAge(0);
       setState((s) => ({ ...s, quote: null, oracleValidation: null, outputAmount: "", status: "idle" }));
       setProgressStep("idle");
       return;
     }
 
+    const controller = new AbortController();
+    quoteAbortRef.current = controller;
     const rawAmount = parseAmount(inputAmount, inputToken.decimals);
     setState((s) => ({ ...s, status: "quoting", error: null }));
     setProgressStep("quoting");
@@ -165,8 +175,9 @@ export function DarkSwap() {
         skipSafety: (!safetyCheckEnabled).toString(),
       });
 
-      const res = await fetch(`/api/quote?${params}`);
+      const res = await fetch(`/api/quote?${params}`, { signal: controller.signal });
       const data: QuoteApiResponse & { error?: string } = await res.json();
+      if (quoteAbortRef.current !== controller) return;
 
       if (data.error) throw new Error(data.error);
 
@@ -185,9 +196,12 @@ export function DarkSwap() {
       }));
       setProgressStep("idle");
     } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") return;
       const msg = err instanceof Error ? err.message : "Failed to get quote";
       setState((s) => ({ ...s, status: "error", error: msg, quote: null, outputAmount: "" }));
       setProgressStep("error");
+    } finally {
+      if (quoteAbortRef.current === controller) quoteAbortRef.current = null;
     }
   }, []);
 
@@ -205,6 +219,10 @@ export function DarkSwap() {
     return () => { if (quoteTimerRef.current) clearTimeout(quoteTimerRef.current); };
   }, [state.inputToken, state.outputToken, state.inputAmount, state.slippageBps,
       state.oracleEnabled, state.safetyCheckEnabled, fetchQuote]);
+
+  useEffect(() => {
+    return () => quoteAbortRef.current?.abort();
+  }, []);
 
   // Quote age counter
   useEffect(() => {
@@ -318,7 +336,13 @@ export function DarkSwap() {
   }, [publicKey, connection]);
 
   useEffect(() => {
-    if (publicKey) refreshEphemeralBalances();
+    if (!publicKey) return undefined;
+
+    const id = setTimeout(() => {
+      void refreshEphemeralBalances();
+    }, 0);
+
+    return () => clearTimeout(id);
   }, [publicKey, refreshEphemeralBalances]);
 
   // ── Derived state ────────────────────────────────────────────────────
@@ -619,10 +643,15 @@ export function DarkSwap() {
         </div>
       </motion.div>
 
-      {/* Swap history — persistent, shown below the card when connected */}
+      {/* Convex subscriptions update this feed as soon as swaps are recorded. */}
+      <div className="w-full max-w-md mx-auto mt-3">
+        <SwapHistoryPanel variant="live" defaultExpanded limit={12} />
+      </div>
+
+      {/* Wallet history — persistent, shown below the live feed when connected */}
       {connected && publicKey && (
         <div className="w-full max-w-md mx-auto mt-3">
-          <SwapHistoryPanel walletAddress={publicKey.toString()} />
+          <SwapHistoryPanel walletAddress={publicKey.toString()} variant="wallet" />
         </div>
       )}
 

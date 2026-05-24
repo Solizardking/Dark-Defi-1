@@ -75,8 +75,16 @@ export function formatAmount(amount: string, decimals: number): string {
 }
 
 export function parseAmount(value: string, decimals: number): string {
-  const num = parseFloat(value) || 0;
-  return Math.floor(num * Math.pow(10, decimals)).toString();
+  const normalized = value.trim();
+  if (!/^\d*\.?\d*$/.test(normalized) || normalized === "" || normalized === ".") {
+    return "0";
+  }
+
+  const [whole = "0", fraction = ""] = normalized.split(".");
+  const wholeUnits = BigInt(whole || "0") * (10n ** BigInt(decimals));
+  const fractionUnits = BigInt((fraction.padEnd(decimals, "0").slice(0, decimals)) || "0");
+
+  return (wholeUnits + fractionUnits).toString();
 }
 
 export function getTokenBySymbol(symbol: string): Token | undefined {

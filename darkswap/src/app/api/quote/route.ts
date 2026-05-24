@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getJupiterOrder, getJupiterQuote } from "@/lib/jupiter";
 import { getDflowQuote } from "@/lib/dflow";
 import { validateOraclePrice } from "@/lib/oracle";
+import { isRawTokenAmount, isSolanaAddress, parseSlippageBps } from "@/lib/requestValidation";
 import { checkTokenSafety } from "@/lib/safety";
 import type { SwapQuote } from "@/types";
 
@@ -111,12 +112,24 @@ export async function GET(req: NextRequest) {
   const inputMint = searchParams.get("inputMint");
   const outputMint = searchParams.get("outputMint");
   const amount = searchParams.get("amount");
-  const slippageBps = Number.parseInt(searchParams.get("slippageBps") ?? "50", 10);
+  const slippageBps = parseSlippageBps(searchParams.get("slippageBps"));
   const skipOracle = searchParams.get("skipOracle") === "true";
   const skipSafety = searchParams.get("skipSafety") === "true";
 
-  if (!inputMint || !outputMint || !amount) {
-    return NextResponse.json({ error: "inputMint, outputMint, amount are required" }, { status: 400 });
+  if (!isSolanaAddress(inputMint) || !isSolanaAddress(outputMint)) {
+    return NextResponse.json({ error: "Valid inputMint and outputMint are required" }, { status: 400 });
+  }
+
+  if (inputMint === outputMint) {
+    return NextResponse.json({ error: "inputMint and outputMint must differ" }, { status: 400 });
+  }
+
+  if (!isRawTokenAmount(amount)) {
+    return NextResponse.json({ error: "amount must be a positive raw token amount" }, { status: 400 });
+  }
+
+  if (slippageBps === null) {
+    return NextResponse.json({ error: "slippageBps must be an integer from 1 to 1000" }, { status: 400 });
   }
 
   try {

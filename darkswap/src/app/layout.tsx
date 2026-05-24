@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
+import { JetBrains_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import { SolanaWalletProvider } from "@/components/WalletProvider";
 import { ConvexClientProvider } from "@/components/ConvexProvider";
 import "./globals.css";
+
+const jetBrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Dark Swap | Privacy-First DEX",
@@ -13,7 +20,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>
+      <body className={jetBrainsMono.variable}>
         <ConvexClientProvider>
           <SolanaWalletProvider>
             {children}

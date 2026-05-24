@@ -8,6 +8,7 @@ const DFLOW_QUOTE_URL =
 
 // pond.dflow.net Trading API — supports sponsored swaps and order+execute flow
 const DFLOW_TRADING_URL = "https://pond.dflow.net";
+const REQUEST_TIMEOUT_MS = 8_000;
 
 function dflowHeaders(): HeadersInit {
   const h: HeadersInit = { "Content-Type": "application/json" };
@@ -44,6 +45,7 @@ export async function getDflowQuote(
   const res = await fetch(`${DFLOW_QUOTE_URL}/quote?${params}`, {
     headers: dflowHeaders(),
     next: { revalidate: 0 },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
 
   if (!res.ok) {
@@ -124,6 +126,7 @@ export async function getDflowOrder(
   const res = await fetch(`${DFLOW_TRADING_URL}/order?${params}`, {
     headers: dflowHeaders(),
     next: { revalidate: 0 },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
 
   if (!res.ok) {
@@ -188,6 +191,7 @@ export async function getDflowSwapTransaction(
     method: "POST",
     headers: dflowHeaders(),
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
 
   if (!res.ok) {

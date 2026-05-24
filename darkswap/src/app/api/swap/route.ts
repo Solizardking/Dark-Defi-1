@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getJupiterOrder } from "@/lib/jupiter";
 import { getDflowOrder } from "@/lib/dflow";
+import { isRawTokenAmount, isSolanaAddress, parseSlippageBps } from "@/lib/requestValidation";
 
 /**
  * POST /api/swap
@@ -16,25 +17,31 @@ import { getDflowOrder } from "@/lib/dflow";
  *   - sponsored: if true, user signs + sends via RPC (no /execute needed)
  */
 export async function POST(req: NextRequest) {
-  let inputMint: string, outputMint: string, amount: string, taker: string;
-  let slippageBps = 50;
+  let body: Record<string, unknown>;
 
   try {
-    const body = await req.json();
-    inputMint = body.inputMint;
-    outputMint = body.outputMint;
-    amount = body.amount;
-    taker = body.taker;
-    if (body.slippageBps) slippageBps = Number(body.slippageBps);
+    body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  if (!inputMint || !outputMint || !amount || !taker) {
-    return NextResponse.json(
-      { error: "inputMint, outputMint, amount, taker are required" },
-      { status: 400 }
-    );
+  const { inputMint, outputMint, amount, taker } = body;
+  const slippageBps = parseSlippageBps(body.slippageBps);
+
+  if (!isSolanaAddress(inputMint) || !isSolanaAddress(outputMint) || !isSolanaAddress(taker)) {
+    return NextResponse.json({ error: "Valid inputMint, outputMint, and taker are required" }, { status: 400 });
+  }
+
+  if (inputMint === outputMint) {
+    return NextResponse.json({ error: "inputMint and outputMint must differ" }, { status: 400 });
+  }
+
+  if (!isRawTokenAmount(amount)) {
+    return NextResponse.json({ error: "amount must be a positive raw token amount" }, { status: 400 });
+  }
+
+  if (slippageBps === null) {
+    return NextResponse.json({ error: "slippageBps must be an integer from 1 to 1000" }, { status: 400 });
   }
 
   const hasDflow = !!process.env.DFLOW_API_KEY;

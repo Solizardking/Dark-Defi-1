@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { executeJupiterOrder } from "@/lib/jupiter";
+import { isBase64Payload, isBoundedString } from "@/lib/requestValidation";
 
 /**
  * POST /api/execute
@@ -11,19 +12,19 @@ import { executeJupiterOrder } from "@/lib/jupiter";
  * Returns: { status, signature, inputAmountResult, outputAmountResult, code }
  */
 export async function POST(req: NextRequest) {
-  let signedTransaction: string, requestId: string;
+  let body: Record<string, unknown>;
 
   try {
-    const body = await req.json();
-    signedTransaction = body.signedTransaction;
-    requestId = body.requestId;
+    body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  if (!signedTransaction || !requestId) {
+  const { signedTransaction, requestId } = body;
+
+  if (!isBase64Payload(signedTransaction, 200_000) || !isBoundedString(requestId, 200)) {
     return NextResponse.json(
-      { error: "signedTransaction and requestId are required" },
+      { error: "Valid signedTransaction and requestId are required" },
       { status: 400 }
     );
   }

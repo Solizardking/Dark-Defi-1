@@ -8,7 +8,7 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
 import { WSOL, USDC, formatAmount, parseAmount } from "@/lib/tokens";
-import type { Token, SwapState, QuoteApiResponse, ProgressStep } from "@/types";
+import type { Token, SwapState, QuoteApiResponse, ProgressStep, RecordedSwapInput } from "@/types";
 
 // ── module-level pure helpers re-exported from the hook file ──────────────────
 
@@ -42,7 +42,7 @@ async function jupiterExecute(signed: VersionedTransaction, requestId: string): 
 }
 
 function recordToConvex(
-  fn: (args: Record<string, unknown>) => Promise<unknown>,
+  fn: (args: RecordedSwapInput) => Promise<unknown>,
   sig: string, router: string, st: SwapState, wallet: string, ephemeral: boolean,
 ) {
   const route = st.quote?.routePlan.map((r) => r.swapInfo.label).filter(Boolean).slice(0, 3).join(" → ") ?? "";
@@ -81,6 +81,7 @@ export function useSwap() {
   const recordSwap = useMutation(api.swaps.recordSwap);
   const quoteSourceRef = useRef<string>("jupiter");
   const quoteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const quoteAbortRef = useRef<AbortController | null>(null);
   const quoteTimestampRef = useRef<number>(0);
 
   const [state, setState] = useState<SwapState>({
@@ -107,22 +108,32 @@ export function useSwap() {
     inputToken: Token, outputToken: Token, inputAmount: string,
     slippageBps: number, oracleEnabled: boolean, safetyCheckEnabled: boolean,
   ) => {
+    quoteAbortRef.current?.abort();
+    quoteAbortRef.current = null;
+
     if (!inputAmount || Number.parseFloat(inputAmount) <= 0) {
+      quoteTimestampRef.current = 0;
+      setQuoteAge(0);
       setState((s) => ({ ...s, quote: null, oracleValidation: null, outputAmount: "", status: "idle" }));
       setProgressStep("idle");
       return;
     }
+
+    const controller = new AbortController();
+    quoteAbortRef.current = controller;
     const rawAmount = parseAmount(inputAmount, inputToken.decimals);
     setState((s) => ({ ...s, status: "quoting", error: null }));
     setProgressStep("quoting");
+
     try {
       const params = new URLSearchParams({
         inputMint: inputToken.address, outputMint: outputToken.address,
         amount: rawAmount, slippageBps: slippageBps.toString(),
         skipOracle: (!oracleEnabled).toString(), skipSafety: (!safetyCheckEnabled).toString(),
       });
-      const res = await fetch(`/api/quote?${params}`);
+      const res = await fetch(`/api/quote?${params}`, { signal: controller.signal });
       const data: QuoteApiResponse & { error?: string } = await res.json();
+      if (quoteAbortRef.current !== controller) return;
       if (data.error) throw new Error(data.error);
       quoteTimestampRef.current = Date.now();
       quoteSourceRef.current = data.source ?? "jupiter";
@@ -134,9 +145,12 @@ export function useSwap() {
       }));
       setProgressStep("idle");
     } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") return;
       const msg = err instanceof Error ? err.message : "Failed to get quote";
       setState((s) => ({ ...s, status: "error", error: msg, quote: null, outputAmount: "" }));
       setProgressStep("error");
+    } finally {
+      if (quoteAbortRef.current === controller) quoteAbortRef.current = null;
     }
   }, []);
 
@@ -150,6 +164,10 @@ export function useSwap() {
     return () => { if (quoteTimerRef.current) clearTimeout(quoteTimerRef.current); };
   }, [state.inputToken, state.outputToken, state.inputAmount,
       state.slippageBps, state.oracleEnabled, state.safetyCheckEnabled, fetchQuote]);
+
+  useEffect(() => {
+    return () => quoteAbortRef.current?.abort();
+  }, []);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -203,7 +221,13 @@ export function useSwap() {
   }, [publicKey, connection]);
 
   useEffect(() => {
-    if (publicKey) refreshEphemeralBalances();
+    if (!publicKey) return undefined;
+
+    const id = setTimeout(() => {
+      void refreshEphemeralBalances();
+    }, 0);
+
+    return () => clearTimeout(id);
   }, [publicKey, refreshEphemeralBalances]);
 
   // ── Swap execution ──────────────────────────────────────────────────

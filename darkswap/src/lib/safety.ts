@@ -10,6 +10,7 @@ const SAFE_MINTS = new Set([
   "3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh",
   "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
 ]);
+const REQUEST_TIMEOUT_MS = 4_000;
 
 export async function checkTokenSafety(
   inputMint: string,
@@ -115,7 +116,7 @@ async function checkSingleToken(mint: string): Promise<TokenRisk> {
 async function fetchJupiterShield(mint: string) {
   const res = await fetch(
     `https://tokens.jup.ag/token/${mint}`,
-    { next: { revalidate: 60 } }
+    { next: { revalidate: 60 }, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) }
   );
   if (!res.ok) return null;
   const data = await res.json();
@@ -129,7 +130,7 @@ async function fetchJupiterShield(mint: string) {
 async function fetchTokenMetadata(mint: string) {
   const res = await fetch(
     `https://public-api.birdeye.so/defi/token_overview?address=${mint}`,
-    { next: { revalidate: 60 } }
+    { next: { revalidate: 60 }, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) }
   );
   if (!res.ok) return null;
   const data = await res.json();

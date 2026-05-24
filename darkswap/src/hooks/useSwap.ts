@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
-import { VersionedTransaction } from "@solana/web3.js";
+import { VersionedTransaction, type Connection } from "@solana/web3.js";
 import toast from "react-hot-toast";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -239,10 +239,17 @@ export function useSwap() {
     }
   }, [state, publicKey, signTransaction, connection, recordSwap, ephemeralEnabled]);
 
-  const handleSwapClick = useCallback((onSafetyModal: () => void) => {
-    if (!state.safetyCheck || state.safetyCheck.safe) executeSwap();
-    else onSafetyModal();
+  const [showSafetyModal, setShowSafetyModal] = useState(false);
+
+  const handleSwapClick = useCallback(() => {
+    if (!state.safetyCheck || state.safetyCheck.safe) void executeSwap();
+    else setShowSafetyModal(true);
   }, [state.safetyCheck, executeSwap]);
+
+  const handleSafetyConfirm = useCallback(() => {
+    setShowSafetyModal(false);
+    void executeSwap();
+  }, [executeSwap]);
 
   // ── Derived ─────────────────────────────────────────────────────────
   const oracleBlocked = state.oracleEnabled && state.oracleValidation !== null && !state.oracleValidation.approved;

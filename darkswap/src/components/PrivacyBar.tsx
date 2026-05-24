@@ -1,6 +1,7 @@
 "use client";
 
-import { Shield, Eye, Zap } from "lucide-react";
+import { motion } from "framer-motion";
+import { Shield, Eye } from "lucide-react";
 
 interface Props {
   shieldEnabled: boolean;
@@ -12,32 +13,21 @@ interface Props {
 export function PrivacyBar({ shieldEnabled, oracleEnabled, onShieldToggle, onOracleToggle }: Props) {
   return (
     <div className="mt-3">
-      {/* Toggle row */}
+      {/* Toggle chips */}
       <div className="flex items-center gap-2 mb-3">
-        <ToggleChip
-          icon={<Shield size={12} />}
-          label="ZK Shield"
-          active={shieldEnabled}
-          onClick={onShieldToggle}
-          color="cyan"
-        />
-        <ToggleChip
-          icon={<Eye size={12} />}
-          label="Oracle"
-          active={oracleEnabled}
-          onClick={onOracleToggle}
-          color="purple"
-        />
+        <ToggleChip icon={<Shield size={11} />} label="ZK Shield" active={shieldEnabled} onClick={onShieldToggle} color="cyan"   />
+        <ToggleChip icon={<Eye    size={11} />} label="Oracle"    active={oracleEnabled} onClick={onOracleToggle} color="purple" />
       </div>
 
       {/* Status footer */}
-      <div className="flex items-center justify-center gap-4 py-2 border-t border-white/5">
-        <StatusDot color="green" label="MEV Protected" active />
-        <StatusDot color="cyan" label="Oracle Validated" active={oracleEnabled} />
-        <StatusDot color="purple" label="Zcash Privacy" active={shieldEnabled} />
+      <div className="flex items-center justify-center gap-5 py-2 border-t border-white/5">
+        <StatusDot color="green"  label="MEV Protected"    active />
+        <StatusDot color="cyan"   label="Oracle Validated" active={oracleEnabled}  />
+        <StatusDot color="purple" label="Zcash Privacy"    active={shieldEnabled} />
       </div>
-      <div className="text-center mt-1">
-        <span className="text-xs text-slate-600 tracking-widest uppercase">
+
+      <div className="text-center mt-1.5">
+        <span className="text-[9px] text-slate-700 tracking-widest uppercase">
           Powered by Dark Protocol
         </span>
       </div>
@@ -45,53 +35,58 @@ export function PrivacyBar({ shieldEnabled, oracleEnabled, onShieldToggle, onOra
   );
 }
 
-function ToggleChip({
-  icon, label, active, onClick, color,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  active: boolean;
-  onClick: () => void;
-  color: "cyan" | "purple";
+function ToggleChip({ icon, label, active, onClick, color }: {
+  icon: React.ReactNode; label: string; active: boolean;
+  onClick: () => void; color: "cyan" | "purple";
 }) {
-  const activeStyles =
-    color === "cyan"
-      ? "bg-cyan-500/15 text-cyan-400 border-cyan-500/30 hover:border-cyan-500/50"
-      : "bg-purple-500/15 text-purple-400 border-purple-500/30 hover:border-purple-500/50";
-  const inactiveStyles = "bg-white/5 text-slate-500 border-white/10 hover:border-white/20";
+  const on  = color === "cyan"
+    ? "bg-cyan-500/12 text-cyan-400 border-cyan-500/30 shadow-[0_0_12px_rgba(0,245,255,0.1)]"
+    : "bg-purple-500/12 text-purple-400 border-purple-500/30 shadow-[0_0_12px_rgba(168,85,247,0.1)]";
+  const off = "bg-white/5 text-slate-500 border-white/10";
 
   return (
-    <button
+    <motion.button
+      whileTap={{ scale: 0.94 }}
       onClick={onClick}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold tracking-wider transition-all ${
-        active ? activeStyles : inactiveStyles
-      }`}
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-semibold tracking-wider transition-all ${active ? on : off}`}
     >
-      {icon}
+      <motion.span
+        animate={{ scale: active ? 1 : 0.8, opacity: active ? 1 : 0.5 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      >
+        {icon}
+      </motion.span>
       {label}
-      <span className={`text-xs ${active ? "opacity-100" : "opacity-40"}`}>
+      <motion.span
+        animate={{ opacity: active ? 1 : 0.35 }}
+        className="font-mono text-[9px]"
+      >
         {active ? "ON" : "OFF"}
-      </span>
-    </button>
+      </motion.span>
+    </motion.button>
   );
 }
 
 function StatusDot({ color, label, active }: { color: string; label: string; active: boolean }) {
-  const dotColors: Record<string, string> = {
-    green: "bg-green-400",
-    cyan: "bg-cyan-400",
-    purple: "bg-purple-400",
+  const dots: Record<string, string> = {
+    green:  "bg-green-400  shadow-[0_0_6px_rgba(0,255,136,0.6)]",
+    cyan:   "bg-cyan-400   shadow-[0_0_6px_rgba(0,245,255,0.6)]",
+    purple: "bg-purple-400 shadow-[0_0_6px_rgba(168,85,247,0.6)]",
   };
+
   return (
     <div className="flex items-center gap-1.5">
-      <div
-        className={`w-1.5 h-1.5 rounded-full pulse-dot ${
-          active ? dotColors[color] : "bg-slate-600"
-        }`}
+      <motion.div
+        animate={{ opacity: active ? 1 : 0.2, scale: active ? 1 : 0.7 }}
+        transition={{ duration: 0.25 }}
+        className={`w-1.5 h-1.5 rounded-full ${active ? dots[color] : "bg-slate-600"} ${active ? "pulse-dot" : ""}`}
       />
-      <span className={`text-xs ${active ? "text-slate-400" : "text-slate-600"}`}>
+      <motion.span
+        animate={{ opacity: active ? 1 : 0.3 }}
+        className={`text-[9px] tracking-wide ${active ? "text-slate-400" : "text-slate-600"}`}
+      >
         {label}
-      </span>
+      </motion.span>
     </div>
   );
 }

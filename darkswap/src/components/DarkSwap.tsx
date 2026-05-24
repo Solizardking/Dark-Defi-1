@@ -1,10 +1,14 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { ArrowDown, ChevronDown, Settings, RefreshCw, Loader2, CheckCircle2, AlertTriangle, ExternalLink } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ArrowDown, ChevronDown, Settings, RefreshCw,
+  Loader2, CheckCircle2, AlertTriangle, ExternalLink,
+} from "lucide-react";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { VersionedTransaction, Transaction, Connection } from "@solana/web3.js";
+import { VersionedTransaction, Transaction } from "@solana/web3.js";
 import toast from "react-hot-toast";
 
 import { TokenLogo } from "./TokenLogo";
@@ -13,9 +17,11 @@ import { OracleStatus } from "./OracleStatus";
 import { SafetyModal } from "./SafetyModal";
 import { PrivacyBar } from "./PrivacyBar";
 import { EphemeralPanel } from "./EphemeralPanel";
+import { ShieldedWalletPanel } from "./ShieldedWalletPanel";
+import { SwapProgress, SuccessBurst } from "./SwapProgress";
 
 import { WSOL, USDC, formatAmount, parseAmount } from "@/lib/tokens";
-import type { Token, SwapState, QuoteApiResponse } from "@/types";
+import type { Token, SwapState, QuoteApiResponse, ProgressStep } from "@/types";
 
 const SLIPPAGE_OPTIONS = [10, 50, 100, 200];
 
@@ -49,12 +55,15 @@ export function DarkSwap() {
     ephemeralBalance: null as number | null,
     isLoading: false,
   });
+  const [progressStep, setProgressStep] = useState<ProgressStep>("idle");
+  const [showBurst, setShowBurst] = useState(false);
+  const [swapArrowFlipped, setSwapArrowFlipped] = useState(false);
 
   const quoteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [quoteAge, setQuoteAge] = useState(0);
   const quoteTimestampRef = useRef<number>(0);
 
-  // ── Quote fetching ──────────────────────────────────────────────────
+  // ── Quote fetching (debounce 300ms for snappiness) ──────────────────
   const fetchQuote = useCallback(async (
     inputToken: Token,
     outputToken: Token,
@@ -63,13 +72,15 @@ export function DarkSwap() {
     oracleEnabled: boolean,
     safetyCheckEnabled: boolean,
   ) => {
-    if (!inputAmount || parseFloat(inputAmount) <= 0) {
+    if (!inputAmount || Number.parseFloat(inputAmount) <= 0) {
       setState((s) => ({ ...s, quote: null, oracleValidation: null, outputAmount: "", status: "idle" }));
+      setProgressStep("idle");
       return;
     }
 
     const rawAmount = parseAmount(inputAmount, inputToken.decimals);
     setState((s) => ({ ...s, status: "quoting", error: null }));
+    setProgressStep("quoting");
 
     try {
       const params = new URLSearchParams({
@@ -98,42 +109,41 @@ export function DarkSwap() {
         status: "ready",
         error: null,
       }));
+      setProgressStep("idle");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to get quote";
       setState((s) => ({ ...s, status: "error", error: msg, quote: null, outputAmount: "" }));
+      setProgressStep("error");
     }
   }, []);
 
-  // Debounced quote on input change
+  // Debounced quote on input change (300ms)
   useEffect(() => {
     if (quoteTimerRef.current) clearTimeout(quoteTimerRef.current);
     quoteTimerRef.current = setTimeout(() => {
       if (state.inputToken && state.outputToken && state.inputAmount) {
         fetchQuote(
-          state.inputToken,
-          state.outputToken,
-          state.inputAmount,
-          state.slippageBps,
-          state.oracleEnabled,
-          state.safetyCheckEnabled,
+          state.inputToken, state.outputToken, state.inputAmount,
+          state.slippageBps, state.oracleEnabled, state.safetyCheckEnabled,
         );
       }
-    }, 600);
+    }, 300);
     return () => { if (quoteTimerRef.current) clearTimeout(quoteTimerRef.current); };
-  }, [state.inputToken, state.outputToken, state.inputAmount, state.slippageBps, state.oracleEnabled, state.safetyCheckEnabled, fetchQuote]);
+  }, [state.inputToken, state.outputToken, state.inputAmount, state.slippageBps,
+      state.oracleEnabled, state.safetyCheckEnabled, fetchQuote]);
 
   // Quote age counter
   useEffect(() => {
     const interval = setInterval(() => {
-      if (quoteTimestampRef.current > 0) {
+      if (quoteTimestampRef.current > 0)
         setQuoteAge(Math.floor((Date.now() - quoteTimestampRef.current) / 1000));
-      }
     }, 1000);
     return () => clearInterval(interval);
   }, []);
 
   // ── Handlers ────────────────────────────────────────────────────────
   const handleSwapTokens = useCallback(() => {
+    setSwapArrowFlipped((f) => !f);
     setState((s) => ({
       ...s,
       inputToken: s.outputToken,
@@ -159,23 +169,25 @@ export function DarkSwap() {
         const max = Math.max(0, (bal - 10_000_000) / 1e9);
         setState((s) => ({ ...s, inputAmount: max.toFixed(6) }));
       }
-    } catch {}
+    } catch { /* silent */ }
   }, [publicKey, state.inputToken, connection]);
 
   const handleRefreshQuote = useCallback(() => {
-    if (state.inputToken && state.outputToken && state.inputAmount) {
-      fetchQuote(state.inputToken, state.outputToken, state.inputAmount, state.slippageBps, state.oracleEnabled, state.safetyCheckEnabled);
-    }
+    if (state.inputToken && state.outputToken && state.inputAmount)
+      fetchQuote(state.inputToken, state.outputToken, state.inputAmount,
+        state.slippageBps, state.oracleEnabled, state.safetyCheckEnabled);
   }, [state, fetchQuote]);
 
-  // ── Swap execution ───────────────────────────────────────────────────
+  // ── Swap execution with granular progress ───────────────────────────
   const executeSwap = useCallback(async () => {
     if (!state.quote || !publicKey || !signTransaction) return;
 
     setState((s) => ({ ...s, status: "swapping", error: null }));
-    const toastId = toast.loading("Preparing transaction...");
+    const toastId = toast.loading("Building transaction...");
 
     try {
+      // Step 1: Build tx
+      setProgressStep("signing");
       const swapRes = await fetch("https://quote-api.jup.ag/v6/swap", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -192,50 +204,49 @@ export function DarkSwap() {
 
       const txBuf = Buffer.from(swapTransaction, "base64");
       let tx: VersionedTransaction | Transaction;
-
       try {
         tx = VersionedTransaction.deserialize(txBuf);
       } catch {
         tx = Transaction.from(txBuf);
       }
 
+      // Step 2: Sign
       toast.loading("Sign in wallet...", { id: toastId });
       const signed = await signTransaction(tx as VersionedTransaction);
 
-      toast.loading("Sending transaction...", { id: toastId });
+      // Step 3: Send
+      setProgressStep("sending");
+      toast.loading("Broadcasting to Solana...", { id: toastId });
       let sig: string;
-
       if (signed instanceof VersionedTransaction) {
-        sig = await connection.sendRawTransaction(signed.serialize(), {
-          skipPreflight: false,
-          maxRetries: 3,
-        });
+        sig = await connection.sendRawTransaction(signed.serialize(), { skipPreflight: false, maxRetries: 3 });
       } else {
-        sig = await connection.sendRawTransaction((signed as Transaction).serialize(), {
-          skipPreflight: false,
-          maxRetries: 3,
-        });
+        sig = await connection.sendRawTransaction((signed as Transaction).serialize(), { skipPreflight: false, maxRetries: 3 });
       }
 
-      toast.loading("Confirming...", { id: toastId });
+      // Step 4: Confirm
+      setProgressStep("confirming");
+      toast.loading("Confirming on-chain...", { id: toastId });
       const conf = await connection.confirmTransaction(sig, "confirmed");
       if (conf.value.err) throw new Error(`Transaction failed: ${JSON.stringify(conf.value.err)}`);
 
-      toast.success("Swap successful!", { id: toastId });
+      // Success!
+      setProgressStep("success");
+      setShowBurst(true);
+      setTimeout(() => setShowBurst(false), 1000);
+      toast.success("🌑 Swap complete!", { id: toastId, duration: 4000 });
       setState((s) => ({ ...s, status: "success", txSignature: sig, inputAmount: "", outputAmount: "", quote: null }));
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Swap failed";
       toast.error(msg, { id: toastId });
       setState((s) => ({ ...s, status: "error", error: msg }));
+      setProgressStep("error");
     }
   }, [state.quote, publicKey, signTransaction, connection]);
 
   const handleSwapClick = useCallback(() => {
-    if (!state.safetyCheck || state.safetyCheck.safe) {
-      executeSwap();
-    } else {
-      setShowSafetyModal(true);
-    }
+    if (!state.safetyCheck || state.safetyCheck.safe) executeSwap();
+    else setShowSafetyModal(true);
   }, [state.safetyCheck, executeSwap]);
 
   // ── Ephemeral balance refresh ─────────────────────────────────────
@@ -244,11 +255,7 @@ export function DarkSwap() {
     setEphemeralBalances((b) => ({ ...b, isLoading: true }));
     try {
       const bal = await connection.getBalance(publicKey);
-      setEphemeralBalances({
-        baseBalance: bal / 1e9,
-        ephemeralBalance: null,
-        isLoading: false,
-      });
+      setEphemeralBalances({ baseBalance: bal / 1e9, ephemeralBalance: null, isLoading: false });
     } catch {
       setEphemeralBalances((b) => ({ ...b, isLoading: false }));
     }
@@ -259,16 +266,8 @@ export function DarkSwap() {
   }, [publicKey, refreshEphemeralBalances]);
 
   // ── Derived state ────────────────────────────────────────────────────
-  const oracleBlocked =
-    state.oracleEnabled &&
-    state.oracleValidation !== null &&
-    !state.oracleValidation.approved;
-
-  const canSwap =
-    connected &&
-    state.status === "ready" &&
-    state.quote !== null &&
-    !oracleBlocked;
+  const oracleBlocked = state.oracleEnabled && state.oracleValidation !== null && !state.oracleValidation.approved;
+  const canSwap = connected && state.status === "ready" && state.quote !== null && !oracleBlocked;
 
   const swapBtnClass = !connected
     ? "swap-btn-ready"
@@ -291,58 +290,102 @@ export function DarkSwap() {
   // ── Render ───────────────────────────────────────────────────────────
   return (
     <>
-      <div className="w-full max-w-md mx-auto">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="w-full max-w-md mx-auto"
+      >
         {/* Card */}
-        <div className="glass neon-border-cyan rounded-2xl p-4 relative overflow-hidden">
-          {/* Scanline */}
-          <div className="scanline opacity-30" />
+        <div className="glass-card neon-border-cyan rounded-2xl p-4 relative overflow-hidden">
+          {/* Animated scanline */}
+          <div className="scanline opacity-20" />
+
+          {/* Corner accents */}
+          <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-cyan-500/30 rounded-tl-2xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-cyan-500/20 rounded-tr-2xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-purple-500/20 rounded-bl-2xl pointer-events-none" />
+          <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-purple-500/15 rounded-br-2xl pointer-events-none" />
+
+          {/* Success burst */}
+          <AnimatePresence>
+            {showBurst && <SuccessBurst />}
+          </AnimatePresence>
 
           {/* Header */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 relative z-10">
             <div>
-              <h1 className="text-base font-bold gradient-text-cyan tracking-wider">DARK SWAP</h1>
-              <p className="text-xs text-slate-600 mt-0.5">Privacy-first DEX aggregation</p>
+              <h1 className="text-base font-bold gradient-text-cyan tracking-wider anim-flicker">
+                DARK SWAP
+              </h1>
+              <p className="text-[10px] text-slate-600 mt-0.5 tracking-widest">
+                Privacy-first DEX aggregation
+              </p>
             </div>
             <div className="flex items-center gap-2">
               {state.quote && (
-                <button
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
                   onClick={handleRefreshQuote}
                   className="p-1.5 rounded-lg hover:bg-white/5 text-slate-500 hover:text-cyan-400 transition-colors"
                   title={`Quote ${quoteAge}s ago`}
                 >
-                  <RefreshCw size={14} className={state.status === "quoting" ? "animate-spin text-cyan-400" : ""} />
-                </button>
+                  <motion.div
+                    animate={state.status === "quoting" ? { rotate: 360 } : { rotate: 0 }}
+                    transition={{ duration: 0.8, repeat: state.status === "quoting" ? Number.POSITIVE_INFINITY : 0, ease: "linear" }}
+                  >
+                    <RefreshCw size={14} className={state.status === "quoting" ? "text-cyan-400" : ""} />
+                  </motion.div>
+                </motion.button>
               )}
-              <button
+              <motion.button
+                whileTap={{ scale: 0.9 }}
                 onClick={() => setShowSettings(!showSettings)}
                 className={`p-1.5 rounded-lg hover:bg-white/5 transition-colors ${showSettings ? "text-cyan-400" : "text-slate-500 hover:text-slate-300"}`}
               >
-                <Settings size={14} />
-              </button>
+                <motion.div
+                  animate={{ rotate: showSettings ? 45 : 0 }}
+                  transition={{ duration: 0.2, type: "spring", stiffness: 300 }}
+                >
+                  <Settings size={14} />
+                </motion.div>
+              </motion.button>
             </div>
           </div>
 
           {/* Settings panel */}
-          {showSettings && (
-            <div className="mb-4 p-3 bg-white/3 rounded-xl border border-white/8">
-              <div className="text-xs font-semibold text-slate-400 tracking-wider mb-2">SLIPPAGE</div>
-              <div className="flex gap-2">
-                {SLIPPAGE_OPTIONS.map((bps) => (
-                  <button
-                    key={bps}
-                    onClick={() => setState((s) => ({ ...s, slippageBps: bps }))}
-                    className={`flex-1 py-1.5 rounded-lg text-xs font-mono transition-all ${
-                      state.slippageBps === bps
-                        ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/40"
-                        : "bg-white/5 text-slate-500 border border-white/10 hover:border-white/20"
-                    }`}
-                  >
-                    {(bps / 100).toFixed(1)}%
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          <AnimatePresence>
+            {showSettings && (
+              <motion.div
+                initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                animate={{ opacity: 1, height: "auto", marginBottom: 16 }}
+                exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+              >
+                <div className="p-3 bg-white/3 rounded-xl border border-white/8 overflow-hidden">
+                  <div className="text-[10px] font-semibold text-slate-400 tracking-widest mb-2">
+                    SLIPPAGE TOLERANCE
+                  </div>
+                  <div className="flex gap-2">
+                    {SLIPPAGE_OPTIONS.map((bps) => (
+                      <motion.button
+                        key={bps}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setState((s) => ({ ...s, slippageBps: bps }))}
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-mono transition-all ${
+                          state.slippageBps === bps
+                            ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 shadow-[0_0_12px_rgba(0,245,255,0.15)]"
+                            : "bg-white/5 text-slate-500 border border-white/10 hover:border-white/20"
+                        }`}
+                      >
+                        {(bps / 100).toFixed(1)}%
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Input */}
           <TokenInput
@@ -355,13 +398,19 @@ export function DarkSwap() {
           />
 
           {/* Swap arrow */}
-          <div className="flex justify-center my-2">
-            <button
+          <div className="flex justify-center my-2 relative z-10">
+            <motion.button
+              whileTap={{ scale: 0.85 }}
               onClick={handleSwapTokens}
               className="swap-arrow-btn p-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-cyan-400"
             >
-              <ArrowDown size={16} />
-            </button>
+              <motion.div
+                animate={{ rotate: swapArrowFlipped ? 180 : 0 }}
+                transition={{ type: "spring", stiffness: 260, damping: 20 }}
+              >
+                <ArrowDown size={16} />
+              </motion.div>
+            </motion.button>
           </div>
 
           {/* Output */}
@@ -376,19 +425,37 @@ export function DarkSwap() {
           />
 
           {/* Quote details */}
-          {state.quote && state.status !== "quoting" && (
-            <QuoteDetails quote={state.quote} inputToken={state.inputToken} outputToken={state.outputToken} />
-          )}
+          <AnimatePresence mode="wait">
+            {state.quote && state.status !== "quoting" && (
+              <motion.div
+                key="quote"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.2 }}
+              >
+                <QuoteDetails
+                  quote={state.quote}
+                  outputToken={state.outputToken}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Oracle status */}
-          <div className="mt-3">
+          <motion.div
+            className="mt-3"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+          >
             <OracleStatus
               oracle={state.oracleValidation}
               loading={state.status === "quoting"}
               enabled={state.oracleEnabled}
               onToggle={() => setState((s) => ({ ...s, oracleEnabled: !s.oracleEnabled }))}
             />
-          </div>
+          </motion.div>
 
           {/* Ephemeral panel */}
           <div className="mt-2">
@@ -401,6 +468,13 @@ export function DarkSwap() {
             />
           </div>
 
+          {/* Shielded wallet — visible when privacy shield is ON */}
+          {state.privacyEnabled && (
+            <div className="mt-2">
+              <ShieldedWalletPanel />
+            </div>
+          )}
+
           {/* Privacy bar */}
           <PrivacyBar
             shieldEnabled={state.privacyEnabled}
@@ -409,22 +483,44 @@ export function DarkSwap() {
             onOracleToggle={() => setState((s) => ({ ...s, oracleEnabled: !s.oracleEnabled }))}
           />
 
+          {/* Swap progress tracker */}
+          <SwapProgress
+            status={state.status}
+            progressStep={progressStep}
+            error={state.error}
+            txSignature={state.txSignature}
+          />
+
           {/* Swap button */}
-          <button
+          <motion.button
+            whileTap={connected && canSwap ? { scale: 0.98 } : {}}
             onClick={connected ? handleSwapClick : undefined}
-            disabled={connected && (state.status === "swapping" || state.status === "quoting" || (!canSwap && state.status !== "success" && state.status !== "error"))}
+            disabled={connected && (
+              state.status === "swapping" ||
+              state.status === "quoting" ||
+              (!canSwap && state.status !== "success" && state.status !== "error")
+            )}
             className={`mt-4 w-full py-3.5 rounded-xl text-sm font-bold tracking-wider transition-all disabled:opacity-60 disabled:cursor-not-allowed ${swapBtnClass}`}
           >
             {state.status === "quoting" || state.status === "swapping" ? (
               <span className="flex items-center justify-center gap-2">
-                <Loader2 size={15} className="animate-spin" />
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                >
+                  <Loader2 size={15} />
+                </motion.div>
                 {swapBtnLabel}
               </span>
             ) : state.status === "success" ? (
-              <span className="flex items-center justify-center gap-2">
+              <motion.span
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="flex items-center justify-center gap-2"
+              >
                 <CheckCircle2 size={15} />
                 {swapBtnLabel}
-              </span>
+              </motion.span>
             ) : oracleBlocked ? (
               <span className="flex items-center justify-center gap-2">
                 <AlertTriangle size={15} />
@@ -435,22 +531,26 @@ export function DarkSwap() {
             ) : (
               swapBtnLabel
             )}
-          </button>
+          </motion.button>
 
           {/* TX success link */}
-          {state.txSignature && (
-            <a
-              href={`https://solscan.io/tx/${state.txSignature}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-1.5 mt-2 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
-            >
-              <ExternalLink size={11} />
-              View on Solscan
-            </a>
-          )}
+          <AnimatePresence>
+            {state.txSignature && state.status === "success" && (
+              <motion.a
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                href={`https://solscan.io/tx/${state.txSignature}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-1.5 mt-2 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+              >
+                <ExternalLink size={11} />
+                View on Solscan
+              </motion.a>
+            )}
+          </AnimatePresence>
         </div>
-      </div>
+      </motion.div>
 
       {/* Modals */}
       <TokenModal
@@ -490,54 +590,80 @@ function TokenInput({
   loading?: boolean;
 }) {
   return (
-    <div className="bg-white/3 rounded-xl p-3 border border-white/8 hover:border-white/12 transition-colors">
+    <div className="token-input-box bg-white/3 rounded-xl p-3 border border-white/8 transition-all">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-slate-500">{label}</span>
+        <span className="text-[10px] text-slate-500 tracking-widest uppercase">{label}</span>
         {onMax && (
-          <button onClick={onMax} className="text-xs text-cyan-500 hover:text-cyan-400 transition-colors">
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={onMax}
+            className="text-[10px] font-bold text-cyan-500 hover:text-cyan-400 transition-colors tracking-wider"
+          >
             MAX
-          </button>
+          </motion.button>
         )}
       </div>
       <div className="flex items-center gap-3">
-        <input
-          type="number"
-          inputMode="decimal"
-          placeholder="0.00"
-          value={amount}
-          onChange={(e) => onAmountChange(e.target.value)}
-          readOnly={readonly}
-          className={`flex-1 bg-transparent text-xl font-mono font-semibold text-white placeholder-slate-700 focus:outline-none ${
-            loading ? "animate-pulse text-slate-500" : ""
-          } ${readonly ? "cursor-default" : ""}`}
-        />
-        <button
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex-1 flex items-center gap-1.5"
+            >
+              {[0,1,2].map((i) => (
+                <motion.div
+                  key={i}
+                  className="w-2 h-2 rounded-full bg-cyan-500/40"
+                  animate={{ scale: [1, 1.4, 1], opacity: [0.4, 1, 0.4] }}
+                  transition={{ duration: 0.8, repeat: Number.POSITIVE_INFINITY, delay: i * 0.15 }}
+                />
+              ))}
+            </motion.div>
+          ) : (
+            <motion.input
+              key="input"
+              type="number"
+              inputMode="decimal"
+              placeholder="0.00"
+              value={amount}
+              onChange={(e) => onAmountChange(e.target.value)}
+              readOnly={readonly}
+              className={`flex-1 bg-transparent text-2xl font-mono font-bold text-white placeholder-slate-700 focus:outline-none ${
+                readonly ? "cursor-default" : ""
+              }`}
+            />
+          )}
+        </AnimatePresence>
+        <motion.button
+          whileTap={{ scale: 0.95 }}
           onClick={onTokenClick}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/8 hover:bg-white/12 border border-white/10 hover:border-cyan-500/30 transition-all shrink-0"
+          className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/8 hover:bg-white/12 border border-white/10 hover:border-cyan-500/30 transition-all shrink-0"
         >
           {token ? (
             <>
               <TokenLogo logoURI={token.logoURI} symbol={token.symbol} size={22} />
-              <span className="text-sm font-semibold text-white">{token.symbol}</span>
+              <span className="text-sm font-bold text-white">{token.symbol}</span>
             </>
           ) : (
             <span className="text-sm text-slate-400">Select</span>
           )}
           <ChevronDown size={13} className="text-slate-500" />
-        </button>
+        </motion.button>
       </div>
     </div>
   );
 }
 
 function QuoteDetails({
-  quote, inputToken, outputToken,
+  quote, outputToken,
 }: {
   quote: NonNullable<SwapState["quote"]>;
-  inputToken: Token | null;
   outputToken: Token | null;
 }) {
-  const priceImpact = parseFloat(quote.priceImpactPct || "0");
+  const priceImpact = Number.parseFloat(quote.priceImpactPct || "0");
   const impactColor =
     priceImpact < 0.5 ? "text-green-400"
     : priceImpact < 2 ? "text-amber-400"
@@ -550,7 +676,7 @@ function QuoteDetails({
     .join(" → ");
 
   return (
-    <div className="mt-3 p-3 bg-white/2 rounded-xl border border-white/6 space-y-1.5">
+    <div className="mt-3 p-3 bg-white/2 rounded-xl border border-white/6 space-y-1.5 anim-quote">
       <Row label="Price impact" value={`${priceImpact.toFixed(3)}%`} valueClass={impactColor} />
       <Row
         label="Min received"
@@ -565,8 +691,8 @@ function QuoteDetails({
 function Row({ label, value, valueClass = "text-slate-300" }: { label: string; value: string; valueClass?: string }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-xs text-slate-500">{label}</span>
-      <span className={`text-xs font-mono truncate max-w-[55%] ${valueClass}`}>{value}</span>
+      <span className="text-[10px] text-slate-500">{label}</span>
+      <span className={`text-[10px] font-mono truncate max-w-[55%] ${valueClass}`}>{value}</span>
     </div>
   );
 }

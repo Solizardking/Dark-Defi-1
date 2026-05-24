@@ -608,7 +608,7 @@ Optional: Jupiter, Birdeye, Google AI, RedPill API keys for live trading + infer
 
 ```bash
 git clone https://github.com/x402agent/dark-defi.git
-cd darkterminal
+cd dark-defi
 npm install        # installs all workspaces + sas-lib symlink
 npm run build      # sas-lib → sdk → tee-agents → terminal
 ```
@@ -660,8 +660,8 @@ The Dark Protocol Anchor program (`dark_protocol_program`) is fully implemented 
 - **`withdraw`** — reveal nullifier, redeem SOL (double-spend protected via PDA)
 - **`shielded_transfer`** — spend one note → create two output notes (payment + change)
 
-> **Mainnet deploy wallet:** `AAqkn72VgkZqFbWggn9SvzjzMRW5zsZrTe5VZKu9DwaM` (needs ≥ 3 SOL)
-> Run `bash dark-protocol-program/deploy-mainnet.sh` once funded.
+> **Mainnet deploy:** fund your wallet (`solana balance`) with ≥ 3 SOL then run
+> `bash dark-protocol-program/deploy-mainnet.sh`.
 
 ---
 
@@ -753,18 +753,18 @@ Layer 7 ─── 🤖 AI Agents in TEE
 
 | Doc | What it covers |
 |-----|----------------|
-| [`docs/DARK_DEFI_VISION.md`](docs/DARK_DEFI_VISION.md) | Full protocol vision, all seven layers |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Technical architecture deep-dive |
-| [`docs/SHIELDED_WALLET_GUIDE.md`](docs/SHIELDED_WALLET_GUIDE.md) | ShieldedWallet TypeScript walkthrough |
-| [`docs/TEE_AGENTS.md`](docs/TEE_AGENTS.md) | TEE agent setup, SAS attestation, x402 |
-| [`docs/SDK_INTEGRATION.md`](docs/SDK_INTEGRATION.md) | SDK usage guide |
-| [`docs/ZCASH_INTEGRATION.md`](docs/ZCASH_INTEGRATION.md) | Zcash Sapling port details |
-| [`docs/ORACLE_INTEGRATION_GUIDE.md`](docs/ORACLE_INTEGRATION_GUIDE.md) | Oracle and slippage protection |
-| [`docs/DARK_X402_TERMINAL.md`](docs/DARK_X402_TERMINAL.md) | Terminal feature tour |
-| [`docs/HELIUS_INTEGRATION.md`](docs/HELIUS_INTEGRATION.md) | Helius RPC + DAS setup |
-| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Build and deployment guide |
-| [`docs/TESTING_GUIDE.md`](docs/TESTING_GUIDE.md) | How to verify a build |
-| [`docs/IMPLEMENTATION_SUMMARY.md`](docs/IMPLEMENTATION_SUMMARY.md) | What's built vs roadmap |
+| [`docs/protocol/DARK_DEFI_VISION.md`](docs/protocol/DARK_DEFI_VISION.md) | Full protocol vision, all seven layers |
+| [`docs/protocol/ARCHITECTURE.md`](docs/protocol/ARCHITECTURE.md) | Technical architecture deep-dive |
+| [`docs/protocol/SHIELDED_WALLET_GUIDE.md`](docs/protocol/SHIELDED_WALLET_GUIDE.md) | ShieldedWallet TypeScript walkthrough |
+| [`docs/integration/TEE_AGENTS.md`](docs/integration/TEE_AGENTS.md) | TEE agent setup, SAS attestation, x402 |
+| [`docs/integration/SDK_INTEGRATION.md`](docs/integration/SDK_INTEGRATION.md) | SDK usage guide |
+| [`docs/integration/ZCASH_INTEGRATION.md`](docs/integration/ZCASH_INTEGRATION.md) | Zcash Sapling port details |
+| [`docs/integration/ORACLE_INTEGRATION_GUIDE.md`](docs/integration/ORACLE_INTEGRATION_GUIDE.md) | Oracle and slippage protection |
+| [`docs/integration/DARK_X402_TERMINAL.md`](docs/integration/DARK_X402_TERMINAL.md) | Terminal feature tour |
+| [`docs/integration/HELIUS_INTEGRATION.md`](docs/integration/HELIUS_INTEGRATION.md) | Helius RPC + DAS setup |
+| [`docs/deployment/DEPLOYMENT.md`](docs/deployment/DEPLOYMENT.md) | Build and deployment guide |
+| [`docs/reference/TESTING_GUIDE.md`](docs/reference/TESTING_GUIDE.md) | How to verify a build |
+| [`docs/reference/IMPLEMENTATION_SUMMARY.md`](docs/reference/IMPLEMENTATION_SUMMARY.md) | What's built vs roadmap |
 
 ---
 
@@ -772,7 +772,7 @@ Layer 7 ─── 🤖 AI Agents in TEE
 
 ```bash
 git clone https://github.com/x402agent/dark-defi.git
-cd darkterminal
+cd dark-defi
 git checkout -b feat/your-feature
 npm install && npm run build
 # ... make changes, add tests ...

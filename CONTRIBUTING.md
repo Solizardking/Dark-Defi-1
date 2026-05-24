@@ -6,7 +6,7 @@ Thanks for your interest. This is alpha software dealing with cryptography and v
 
 ## Project layout
 
-```
+```text
 Dark-Defi/
 ├── dark-protocol-program/   # Anchor/Rust — on-chain shielded note pool
 │   ├── programs/dark-protocol-program/src/lib.rs
@@ -60,7 +60,7 @@ ln -sf ../../.secrets/.env packages/terminal/.env
 
 ## Commit style
 
-```
+```text
 <type>(<scope>): <subject>
 
 <body explaining motivation>
@@ -73,7 +73,7 @@ Example: `feat(sdk): add Birdeye fallback to PriceOracle`
 
 ## Reporting security issues
 
-Do **not** open a public issue for vulnerabilities. Email the maintainers directly so we can coordinate a fix and disclosure.
+Do **not** open a public issue for vulnerabilities. Use [GitHub's private vulnerability reporting](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability) (the **Security** tab → "Report a vulnerability") so we can coordinate a fix and disclosure. See [SECURITY.md](SECURITY.md) for the full policy.
 
 ## Code of conduct
 

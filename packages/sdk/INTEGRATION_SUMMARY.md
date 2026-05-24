@@ -223,7 +223,7 @@ warnings.forEach(w => {
 ### Build Verification
 
 ```bash
-cd /Users/8bit/Downloads/Dark-Wallet/sdk/typescript
+cd <path-to>/Dark-Defi/packages/sdk
 npm install
 npm run build
 ```

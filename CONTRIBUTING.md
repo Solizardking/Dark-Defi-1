@@ -14,22 +14,24 @@ Dark-Defi/
 │   └── deploy-mainnet.sh    # mainnet deploy (needs ≥ 3 SOL mainnet)
 ├── packages/
 │   ├── sdk/                 # @openclawdsol/dark-protocol-sdk (npm published)
-│   ├── terminal/            # x402 dark terminal CLI
-│   ├── tee-agents/          # TEE-isolated AI agents + SAS attestation
-│   └── sas-lib/             # Solana Attestation Service client
+│   ├── protocol/            # @openclawdsol/dark-protocol (npm published)
+│   ├── tee-agents/          # @openclawdsol/dark-tee-agents — incl. ClawdTeeAgent
+│   ├── dark-defi/           # `dark-defi` umbrella meta-package
+│   ├── terminal/            # dark-x402-terminal — interactive CLI
+│   └── sas-lib/             # Solana Attestation Service client (local workspace)
 └── darkswap/                # DarkSwap Next.js app (Vercel-ready)
 ```
 
 ## Ground rules
 
-- **No secrets in commits.** `.secrets/`, `.env`, key JSONs, and mnemonic phrases never enter the tree. The repo's `.gitignore` blocks the obvious patterns; double-check `git diff --staged` before pushing.
+- **No secrets in commits.** `.secrets/`, `.env`, `.npmrc`, key JSONs, and mnemonic phrases never enter the tree. The repo's `.gitignore` blocks the obvious patterns; CI runs `gitleaks` on every push (`.gitleaks.toml`). Double-check `git diff --staged` before pushing.
 - **Don't commit `dist/` or `node_modules/`.** Builds are reproducible from source.
 - **Squash on merge.** Keep `main`'s history readable.
 
 ## Getting started
 
 ```bash
-git clone https://github.com/8bitsats/Dark-Defi.git
+git clone https://github.com/x402agent/dark-defi.git
 cd Dark-Defi
 npm install
 

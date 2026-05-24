@@ -168,7 +168,7 @@ cargo test --lib zcash
 - [Zcash Protocol Specification](https://zips.z.cash/protocol/protocol.pdf)
 - [ZIP-32: Shielded Hierarchical Deterministic Wallets](https://zips.z.cash/zip-0032)
 - [Sapling Specification](https://github.com/zcash/zips/blob/master/protocol/sapling.pdf)
-- Original C++ implementation: `/Users/8bit/Downloads/ClaudeCash-master/src/zcash/`
+- Original C++ implementation: `<vendored>/zcash/`
 
 ## Next Steps
 

@@ -1,0 +1,42 @@
+# gitleaks config for Dark DeFi
+# Run locally: gitleaks detect --config .gitleaks.toml --redact
+title = "Dark DeFi gitleaks config"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "npm-publish-token"
+description = "npm publish token (npm_…)"
+regex = '''npm_[A-Za-z0-9]{30,}'''
+keywords = ["npm_"]
+
+[[rules]]
+id = "helius-api-key"
+description = "Helius API key in URL"
+regex = '''helius-rpc\.com/\?api-key=[A-Za-z0-9-]{16,}'''
+keywords = ["api-key="]
+
+[[rules]]
+id = "solana-base58-secret"
+description = "Plausible base58 Solana secret key (88-char ed25519)"
+regex = '''(?i)(secret|private|keypair|sk)[a-z_]*\s*[:=]\s*['"]?[1-9A-HJ-NP-Za-km-z]{86,90}['"]?'''
+keywords = ["secret", "private", "keypair"]
+
+[allowlist]
+description = "Allow scrubbed/example placeholders"
+regexes = [
+  '''npm_REPLACE_WITH_YOUR_TOKEN''',
+  '''api-key=YOUR_KEY''',
+  '''api-key=\$\{[A-Z_]+\}''',
+]
+paths = [
+  '''(.+)?\.example$''',
+  '''docs/.*''',
+  '''README\.md''',
+  '''SECURITY\.md''',
+  '''CONTRIBUTING\.md''',
+  '''\.gitleaks\.toml''',
+  # Vendored upstream — scanned only on commits to our paths
+  '''magicblock-engine-examples-main/.*''',
+]

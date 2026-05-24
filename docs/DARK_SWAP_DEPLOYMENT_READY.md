@@ -108,7 +108,7 @@ All production API keys are set and active:
 
 ### Development
 ```bash
-cd /Users/8bit/Downloads/Dark-Wallet/dark-terminal-ui
+cd <path-to>/Dark-Defi/darkswap
 npm run dev
 ```
 Navigate to: **http://localhost:3000/swap**
@@ -468,7 +468,7 @@ Testing: AWAITING RUNTIME TESTS
 
 **RUN THE APPLICATION**:
 ```bash
-cd /Users/8bit/Downloads/Dark-Wallet/dark-terminal-ui
+cd <path-to>/Dark-Defi/darkswap
 npm run dev
 ```
 

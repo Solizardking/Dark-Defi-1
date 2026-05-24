@@ -2,7 +2,7 @@ import { PublicKey, Transaction } from '@solana/web3.js';
 import { DarkProtocolClient } from './client';
 import type { JupiterSwapRoute, PrivateSwapParams } from './types';
 
-const JUPITER_API_URL = 'https://quote-api.jup.ag/v6';
+const JUPITER_API_URL = 'https://lite-api.jup.ag/swap/v1';
 const JUPITER_PROGRAM_ID = new PublicKey('JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4');
 
 export class PrivateSwapManager {

@@ -21,14 +21,66 @@ const KNOWN_TOKENS = {
   JUP: 'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN',
 };
 
+type TokenMetadata = {
+  mint: string;
+  symbol: string;
+  name: string;
+  decimals: number;
+};
+
 export class DarkSwapUI {
   private swapManager: PrivateSwapManager;
   private theme: any;
   private swapHistory: any[] = [];
+  private readonly tokenMetadataCache = new Map<string, TokenMetadata>();
 
   constructor(swapManager: PrivateSwapManager, theme: any) {
     this.swapManager = swapManager;
     this.theme = theme;
+    for (const [symbol, mint] of Object.entries(KNOWN_TOKENS)) {
+      this.tokenMetadataCache.set(mint, {
+        mint,
+        symbol,
+        name: symbol,
+        decimals: mint === KNOWN_TOKENS.SOL ? 9 : symbol === 'BONK' ? 5 : 6,
+      });
+    }
+  }
+
+  private async resolveTokenMetadata(mint: string): Promise<TokenMetadata> {
+    const cached = this.tokenMetadataCache.get(mint);
+    if (cached) return cached;
+
+    const response = await fetch('https://api.mainnet-beta.solana.com', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'getAccountInfo',
+        params: [mint, { encoding: 'jsonParsed' }],
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to load token metadata for ${mint}`);
+    }
+
+    const result: any = await response.json();
+    const info = result?.result?.value?.data?.parsed?.info;
+    const metadataExtension = info?.extensions?.find(
+      (extension: any) => extension?.extension === 'tokenMetadata'
+    )?.state;
+
+    const metadata = {
+      mint,
+      symbol: metadataExtension?.symbol || `${mint.slice(0, 4)}...${mint.slice(-4)}`,
+      name: metadataExtension?.name || metadataExtension?.symbol || mint,
+      decimals: Number(info?.decimals ?? 6),
+    };
+
+    this.tokenMetadataCache.set(mint, metadata);
+    return metadata;
   }
 
   /**
@@ -199,7 +251,14 @@ export class DarkSwapUI {
     const spinner = ora('Fetching best route...').start();
 
     try {
-      const inputAmount = BigInt(Math.floor(amount * 1e9)); // Convert to lamports
+      const [inputTokenMeta, outputTokenMeta] = await Promise.all([
+        this.resolveTokenMetadata(inputMint),
+        this.resolveTokenMetadata(outputMint),
+      ]);
+
+      const inputAmount = BigInt(
+        Math.floor(amount * Math.pow(10, inputTokenMeta.decimals))
+      );
 
       const quote = await this.swapManager.getQuote(
         new PublicKey(inputMint),
@@ -214,9 +273,11 @@ export class DarkSwapUI {
       console.log();
       console.log(this.theme.primary('📋 Quote Details:'));
       console.log(this.theme.dim('─'.repeat(60)));
-      console.log(`Input Amount:     ${amount} (${Number(quote.inputAmount) / 1e9})`);
+      console.log(`Input Amount:     ${amount} ${inputTokenMeta.symbol}`);
       console.log(
-        `Expected Output:  ${Number(quote.outputAmount) / 1e9} (approx)`
+        `Expected Output:  ${
+          Number(quote.outputAmount) / Math.pow(10, outputTokenMeta.decimals)
+        } ${outputTokenMeta.symbol} (approx)`
       );
       console.log(`Price Impact:     ${quote.priceImpactPct.toFixed(4)}%`);
       console.log(`Slippage:         ${slippageBps / 100}%`);
@@ -261,10 +322,10 @@ export class DarkSwapUI {
         // Add to history
         this.swapHistory.push({
           timestamp: Date.now(),
-          inputToken: inputMint.slice(0, 8),
-          outputToken: outputMint.slice(0, 8),
+          inputToken: inputTokenMeta.symbol,
+          outputToken: outputTokenMeta.symbol,
           inputAmount: amount,
-          outputAmount: Number(quote.outputAmount) / 1e9,
+          outputAmount: Number(quote.outputAmount) / Math.pow(10, outputTokenMeta.decimals),
           signature: signature.slice(0, 16),
         });
       } catch (error: any) {
@@ -322,7 +383,14 @@ export class DarkSwapUI {
     const spinner = ora('Fetching quote...').start();
 
     try {
-      const inputAmount = BigInt(Math.floor(amount * 1e9));
+      const [inputTokenMeta, outputTokenMeta] = await Promise.all([
+        this.resolveTokenMetadata(inputToken),
+        this.resolveTokenMetadata(outputToken),
+      ]);
+
+      const inputAmount = BigInt(
+        Math.floor(amount * Math.pow(10, inputTokenMeta.decimals))
+      );
 
       const quote = await this.swapManager.getQuote(
         new PublicKey(inputToken),
@@ -336,8 +404,12 @@ export class DarkSwapUI {
       console.log();
       console.log(this.theme.success('✓ Quote:'));
       console.log(this.theme.dim('─'.repeat(60)));
-      console.log(`Input:            ${amount}`);
-      console.log(`Output:           ${Number(quote.outputAmount) / 1e9}`);
+      console.log(`Input:            ${amount} ${inputTokenMeta.symbol}`);
+      console.log(
+        `Output:           ${
+          Number(quote.outputAmount) / Math.pow(10, outputTokenMeta.decimals)
+        } ${outputTokenMeta.symbol}`
+      );
       console.log(`Price Impact:     ${quote.priceImpactPct.toFixed(4)}%`);
       console.log(`Exchange Rate:    1 → ${(Number(quote.outputAmount) / Number(quote.inputAmount)).toFixed(6)}`);
       console.log(this.theme.dim('─'.repeat(60)));
@@ -379,8 +451,8 @@ export class DarkSwapUI {
       const time = new Date(swap.timestamp).toLocaleTimeString();
       table.push([
         time,
-        swap.inputToken + '...',
-        swap.outputToken + '...',
+        swap.inputToken,
+        swap.outputToken,
         swap.inputAmount.toFixed(4),
         swap.outputAmount.toFixed(4),
         swap.signature + '...',

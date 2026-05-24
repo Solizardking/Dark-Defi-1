@@ -4,8 +4,8 @@ import type { SwapQuote } from "@/types";
 
 const JUP_V1 =
   process.env.JUPITER_ENDPOINT
-    ? `${process.env.JUPITER_ENDPOINT}/v6`
-    : "https://quote-api.jup.ag/v6";
+    ? `${process.env.JUPITER_ENDPOINT}/swap/v1`
+    : "https://lite-api.jup.ag/swap/v1";
 
 // ── v2 Meta-Aggregator — order+execute flow ───────────────────────────────────
 

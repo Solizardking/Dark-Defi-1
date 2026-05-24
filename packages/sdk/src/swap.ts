@@ -1,12 +1,11 @@
-import { PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js';
+import { PublicKey, VersionedTransaction } from '@solana/web3.js';
 import { DarkProtocolClient } from './client';
-import { PriceOracle, type TokenPrice, KNOWN_TOKENS, formatPrice, formatSlippage } from './oracle';
-import type { JupiterSwapRoute, PrivateSwapParams } from './types';
+import { PriceOracle, type TokenPrice, formatPrice, formatSlippage } from './oracle';
+import type { JupiterSwapRoute } from './types';
 
 // Jupiter Ultra API endpoints
 const JUPITER_ULTRA_API_URL = 'https://lite-api.jup.ag/ultra/v1';
-const JUPITER_QUOTE_API_URL = 'https://quote-api.jup.ag/v6'; // Fallback for quotes
-const JUPITER_PROGRAM_ID = new PublicKey('JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4');
+const JUPITER_QUOTE_API_URL = 'https://lite-api.jup.ag/swap/v1';
 
 // ============================================================================
 // Types for Jupiter Ultra API
@@ -184,27 +183,18 @@ export class PrivateSwapManager {
     slippageBps: number = 50
   ): Promise<JupiterUltraOrder> {
     const url = new URL(`${JUPITER_ULTRA_API_URL}/order`);
+    url.searchParams.set('inputMint', inputMint.toString());
+    url.searchParams.set('outputMint', outputMint.toString());
+    url.searchParams.set('amount', amount.toString());
+    url.searchParams.set('taker', takerAddress.toString());
+    url.searchParams.set('slippageBps', slippageBps.toString());
 
-    const body = {
-      inputMint: inputMint.toString(),
-      outputMint: outputMint.toString(),
-      amount: amount.toString(),
-      taker: takerAddress.toString(),
-      slippageBps,
-    };
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
+    const headers: Record<string, string> = {};
     if (this.jupiterApiKey) {
       headers['Authorization'] = `Bearer ${this.jupiterApiKey}`;
     }
 
-    const response = await fetch(url.toString(), {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(body),
-    });
+    const response = await fetch(url.toString(), { headers });
 
     if (!response.ok) {
       throw new Error(`Jupiter Ultra order error: ${response.statusText}`);
@@ -273,28 +263,45 @@ export class PrivateSwapManager {
    */
   async checkTokenSafety(mints: string[]): Promise<TokenShieldWarning[]> {
     const url = new URL(`${JUPITER_ULTRA_API_URL}/shield`);
+    for (const mint of mints) {
+      url.searchParams.append('mints', mint);
+    }
 
-    const body = { mints };
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
+    const headers: Record<string, string> = {};
     if (this.jupiterApiKey) {
       headers['Authorization'] = `Bearer ${this.jupiterApiKey}`;
     }
 
-    const response = await fetch(url.toString(), {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(body),
-    });
+    const response = await fetch(url.toString(), { headers });
 
     if (!response.ok) {
       throw new Error(`Jupiter Shield API error: ${response.statusText}`);
     }
 
     const data = await response.json();
-    return data.warnings || [];
+    const warningMap = data.warnings || {};
+
+    return mints.map((mint) => {
+      const mintWarnings = Array.isArray(warningMap[mint]) ? warningMap[mint] : [];
+      const warnings = mintWarnings
+        .map((warning: Record<string, unknown>) => String(warning.message ?? warning.type ?? 'Unknown warning'))
+        .filter(Boolean);
+      const severities = mintWarnings
+        .map((warning: Record<string, unknown>) => String(warning.severity ?? '').toLowerCase());
+
+      const riskLevel: TokenShieldWarning['riskLevel'] =
+        severities.includes('danger') || severities.includes('critical')
+          ? 'critical'
+          : severities.includes('warn') || severities.includes('warning')
+          ? 'medium'
+          : 'low';
+
+      return {
+        mint,
+        warnings,
+        riskLevel,
+      };
+    });
   }
 
   /**
@@ -302,7 +309,7 @@ export class PrivateSwapManager {
    */
   async searchTokens(query: string): Promise<any[]> {
     const url = new URL(`${JUPITER_ULTRA_API_URL}/search`);
-    url.searchParams.set('q', query);
+    url.searchParams.set('query', query);
 
     const headers: Record<string, string> = {};
     if (this.jupiterApiKey) {
@@ -315,7 +322,7 @@ export class PrivateSwapManager {
     }
 
     const data = await response.json();
-    return data.tokens || [];
+    return Array.isArray(data) ? data : data.tokens || [];
   }
 
   /**

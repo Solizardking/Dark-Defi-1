@@ -2,8 +2,7 @@ import { PublicKey, VersionedTransaction } from '@solana/web3.js';
 import { PriceOracle, formatPrice, formatSlippage } from './oracle';
 // Jupiter Ultra API endpoints
 const JUPITER_ULTRA_API_URL = 'https://lite-api.jup.ag/ultra/v1';
-const JUPITER_QUOTE_API_URL = 'https://quote-api.jup.ag/v6'; // Fallback for quotes
-const JUPITER_PROGRAM_ID = new PublicKey('JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4');
+const JUPITER_QUOTE_API_URL = 'https://lite-api.jup.ag/swap/v1';
 // ============================================================================
 // Private Swap Manager with Oracle Integration
 // ============================================================================
@@ -77,24 +76,16 @@ export class PrivateSwapManager {
      */
     async getOrder(inputMint, outputMint, amount, takerAddress, slippageBps = 50) {
         const url = new URL(`${JUPITER_ULTRA_API_URL}/order`);
-        const body = {
-            inputMint: inputMint.toString(),
-            outputMint: outputMint.toString(),
-            amount: amount.toString(),
-            taker: takerAddress.toString(),
-            slippageBps,
-        };
-        const headers = {
-            'Content-Type': 'application/json',
-        };
+        url.searchParams.set('inputMint', inputMint.toString());
+        url.searchParams.set('outputMint', outputMint.toString());
+        url.searchParams.set('amount', amount.toString());
+        url.searchParams.set('taker', takerAddress.toString());
+        url.searchParams.set('slippageBps', slippageBps.toString());
+        const headers = {};
         if (this.jupiterApiKey) {
             headers['Authorization'] = `Bearer ${this.jupiterApiKey}`;
         }
-        const response = await fetch(url.toString(), {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(body),
-        });
+        const response = await fetch(url.toString(), { headers });
         if (!response.ok) {
             throw new Error(`Jupiter Ultra order error: ${response.statusText}`);
         }
@@ -147,30 +138,44 @@ export class PrivateSwapManager {
      */
     async checkTokenSafety(mints) {
         const url = new URL(`${JUPITER_ULTRA_API_URL}/shield`);
-        const body = { mints };
-        const headers = {
-            'Content-Type': 'application/json',
-        };
+        for (const mint of mints) {
+            url.searchParams.append('mints', mint);
+        }
+        const headers = {};
         if (this.jupiterApiKey) {
             headers['Authorization'] = `Bearer ${this.jupiterApiKey}`;
         }
-        const response = await fetch(url.toString(), {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(body),
-        });
+        const response = await fetch(url.toString(), { headers });
         if (!response.ok) {
             throw new Error(`Jupiter Shield API error: ${response.statusText}`);
         }
         const data = await response.json();
-        return data.warnings || [];
+        const warningMap = data.warnings || {};
+        return mints.map((mint) => {
+            const mintWarnings = Array.isArray(warningMap[mint]) ? warningMap[mint] : [];
+            const warnings = mintWarnings
+                .map((warning) => String(warning.message ?? warning.type ?? 'Unknown warning'))
+                .filter(Boolean);
+            const severities = mintWarnings
+                .map((warning) => String(warning.severity ?? '').toLowerCase());
+            const riskLevel = severities.includes('danger') || severities.includes('critical')
+                ? 'critical'
+                : severities.includes('warn') || severities.includes('warning')
+                    ? 'medium'
+                    : 'low';
+            return {
+                mint,
+                warnings,
+                riskLevel,
+            };
+        });
     }
     /**
      * Search for tokens
      */
     async searchTokens(query) {
         const url = new URL(`${JUPITER_ULTRA_API_URL}/search`);
-        url.searchParams.set('q', query);
+        url.searchParams.set('query', query);
         const headers = {};
         if (this.jupiterApiKey) {
             headers['Authorization'] = `Bearer ${this.jupiterApiKey}`;
@@ -180,7 +185,7 @@ export class PrivateSwapManager {
             throw new Error(`Jupiter search error: ${response.statusText}`);
         }
         const data = await response.json();
-        return data.tokens || [];
+        return Array.isArray(data) ? data : data.tokens || [];
     }
     /**
      * Get available routers

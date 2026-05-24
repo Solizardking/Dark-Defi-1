@@ -1,5 +1,7 @@
 import type { Token } from "@/types";
 
+const JUPITER_TOKEN_SEARCH_URL = "https://lite-api.jup.ag/ultra/v1/search";
+
 export const POPULAR_TOKENS: Token[] = [
   {
     address: "So11111111111111111111111111111111111111112",
@@ -98,23 +100,37 @@ export function getTokenByAddress(address: string): Token | undefined {
 }
 
 export async function searchTokens(query: string): Promise<Token[]> {
-  if (!query || query.length < 2) return POPULAR_TOKENS;
+  if (!query) return POPULAR_TOKENS;
   const lower = query.toLowerCase();
   const local = POPULAR_TOKENS.filter(
     (t) =>
       t.symbol.toLowerCase().includes(lower) ||
       t.name.toLowerCase().includes(lower) ||
-      t.address.toLowerCase() === lower
+      t.address.toLowerCase().includes(lower)
   );
   if (local.length > 0) return local;
 
   try {
-    const res = await fetch(
-      `https://tokens.jup.ag/tokens?tags=verified&search=${encodeURIComponent(query)}`
-    );
+    const params = new URLSearchParams({ query });
+    const res = await fetch(`${JUPITER_TOKEN_SEARCH_URL}?${params}`);
     if (!res.ok) return POPULAR_TOKENS;
     const data = await res.json();
-    return Array.isArray(data) ? data.slice(0, 20) : POPULAR_TOKENS;
+    if (!Array.isArray(data)) return POPULAR_TOKENS;
+
+    const mapped = data
+      .map((token: Record<string, unknown>) => ({
+        address: String(token.id ?? ""),
+        symbol: String(token.symbol ?? "UNKNOWN"),
+        name: String(token.name ?? token.symbol ?? "Unknown Token"),
+        decimals: Number(token.decimals ?? 0),
+        logoURI: typeof token.icon === "string" ? token.icon : undefined,
+        tags: Array.isArray(token.tags)
+          ? token.tags.filter((tag): tag is string => typeof tag === "string")
+          : undefined,
+      }))
+      .filter((token: Token) => token.address);
+
+    return mapped.length > 0 ? mapped.slice(0, 20) : POPULAR_TOKENS;
   } catch {
     return POPULAR_TOKENS;
   }

@@ -61,7 +61,7 @@ You'll see the Dark X402 banner and can immediately:
 ## 📁 Project Structure
 
 ```
-/Users/8bit/dark defi terminal/
+<path-to>/Dark-Defi/packages/terminal/
 │
 ├── terminal/                      ⭐ THE TERMINAL (START HERE)
 │   ├── x402-terminal.ts          # Main interface

@@ -12,14 +12,14 @@
 
 <br/>
 
-[![CI](https://github.com/8bitsats/Dark-Defi/actions/workflows/ci.yml/badge.svg)](https://github.com/8bitsats/Dark-Defi/actions/workflows/ci.yml)
+[![CI](https://github.com/x402agent/dark-defi/actions/workflows/ci.yml/badge.svg)](https://github.com/x402agent/dark-defi/actions/workflows/ci.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Anchor](https://img.shields.io/badge/Anchor-0.32.1-9945FF?style=flat-square)](https://www.anchor-lang.com/)
 [![Solana](https://img.shields.io/badge/Solana-Mainnet%20Ready-9945FF?style=flat-square&logo=solana&logoColor=white)](https://solana.com)
 [![License](https://img.shields.io/badge/License-Apache%202.0-00ff41?style=flat-square)](LICENSE)
-[![Alpha](https://img.shields.io/badge/Status-Alpha-ff6600?style=flat-square)](https://github.com/8bitsats/Dark-Defi)
+[![Alpha](https://img.shields.io/badge/Status-Alpha-ff6600?style=flat-square)](https://github.com/x402agent/dark-defi)
 [![Zcash](https://img.shields.io/badge/Zcash-Sapling%20Port-F4B728?style=flat-square)](https://z.cash)
-[![Deploy on Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/8bitsats/Dark-Defi&root=darkswap)
+[![Deploy on Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/x402agent/dark-defi&root=darkswap)
 
 </div>
 
@@ -49,14 +49,17 @@
 >
 > 🦞 **Dark DeFi**: Solana's throughput. Zcash's privacy. Lobster's permanence.
 
-**Dark DeFi** is a privacy-preserving DeFi metaprotocol on Solana. It combines:
+**Dark DeFi** is the privacy hub for Solana — a home base for humans and
+AI agents who want to transact, infer, and converse without leaking
+prompts, balances, counterparties, or strategies to the network.
 
 | Layer | Technology |
 |-------|-----------|
 | 🔐 **Shielded wallets** | Zcash Sapling — 43-byte addresses, ZIP-32 HD keys, ChaCha20-Poly1305 |
 | 🌑 **Dark pools** | Encrypted AMMs + FHE order matching before settlement |
-| 🤖 **AI in TEEs** | Gemini/Claude agents inside SGX enclaves, attested via SAS |
-| 💸 **Private payments** | x402 shielded payment protocol for confidential inference |
+| 🤖 **AI in TEEs** | Claude/Gemini/DeepSeek agents inside SGX/SEV/dstack enclaves, attested via SAS |
+| 🦞 **Clawd agents** | First-class private Solana AI — sealed converse + shielded trade in one call |
+| 💸 **Private payments** | x402 `dark-shielded` payment scheme for confidential inference |
 | 🔑 **Viewing keys** | Selective disclosure — share with auditors, keep from adversaries |
 | ⚡ **MEV resistance** | Order amounts encrypted end-to-end until settlement |
 
@@ -110,12 +113,91 @@ const vk = sw.exportViewingKey();
 # Core SDK — Sapling wallets, note encryption, Jupiter swaps, price oracle
 npm install @openclawdsol/dark-protocol-sdk
 
-# TEE Agents — confidential AI, SAS attestation, x402 payments
+# TEE Agents — confidential AI, SAS attestation, x402 payments, Clawd
 npm install @openclawdsol/dark-tee-agents
 
 # Protocol primitives — low-level Solana client, AI manager
 npm install @openclawdsol/dark-protocol
 ```
+
+---
+
+## 🦞 Meet Clawd — the first private Solana AI agent
+
+`ClawdTeeAgent` (in `@openclawdsol/dark-tee-agents`) is the world's first
+Solana-native AI agent that can **converse privately** and **trade privately**
+in the same flow. Every prompt is sealed end-to-end into a TEE-attested
+enclave; every reply is sealed back to your ephemeral key; every trade flows
+through a shielded route; and the only thing that ever touches the chain is
+a Solana Attestation Service receipt containing nothing but hashes and
+commitments.
+
+```typescript
+import {
+  ClawdTeeAgent,
+  InMemoryClawdAccount,
+  verifyClawdQuote,
+  PAYMENT_ASSETS,
+} from '@openclawdsol/dark-tee-agents';
+
+const clawd = ClawdTeeAgent.spawn({
+  agentId:           'clawd-alpha',
+  owner:             ownerAddress,           // base58 Solana pubkey
+  model:             'dstack/claude-opus-tee',
+  network:           'solana-mainnet',
+  pricePerInference: 10_000n,                // 0.01 USDC per call
+  paymentAsset:      PAYMENT_ASSETS.USDC,
+});
+
+// 1. Verify Clawd's TEE quote before sending a single byte.
+verifyClawdQuote(clawd, { allowedProviders: ['dstack', 'sgx'] });
+
+// 2. Converse — prompt sealed in, reply sealed out, paid via x402-dark.
+const turn = await clawd.converse('How should I rebalance my shielded book?', myModel);
+console.log('Clawd:', turn.reply);
+console.log('On-chain receipt payload:', turn.receipt);
+
+// 3. Trade — Clawd returns a policy-checked JSON decision, then executes
+//    through a private swap router against your shielded wallet.
+const account = new InMemoryClawdAccount({ SOL: 2_000_000_000n });
+const trade = await clawd.trade(
+  {
+    request:         'Rotate 0.5 SOL into USDC privately',
+    allowedMints:    [SOL_MINT, USDC_MINT],
+    maxAtomicAmount: 1_000_000_000n,
+    maxSlippageBps:  50,
+  },
+  myModel,
+  account,   // PrivateSwapRouterLike — use `PrivateSwapManager` in production
+  account,   // ShieldedAccountLike   — use `ShieldedWallet`        in production
+);
+
+if (trade.refused) {
+  console.warn('Clawd refused:', trade.refusalReason);
+} else {
+  console.log('Private swap signature:', trade.swap?.signature);
+}
+```
+
+Run the offline walkthrough:
+
+```bash
+npm run clawd:demo
+```
+
+What stays private:
+
+- The **prompt** — only the attested enclave sees it.
+- The **reply** — sealed to the caller's one-time x25519 key.
+- The **amount paid** — `dark-shielded` x402 publishes a commitment, not a value.
+- The **trade size, mints, and slippage** — encrypted to the swap router.
+- The **balance** — held inside `ShieldedWallet` with Sapling note encryption.
+
+What is public:
+
+- Clawd's **identity attestation** on SAS (model, measurement, signing key).
+- A per-call **inference receipt** on SAS (request hash, response hash, asset, network).
+- The **fact** that an attested agent ran — never the contents.
 
 ---
 
@@ -275,12 +357,18 @@ spawn enclave → verify SGX/TDX quote → seal prompt
 
 | Module | Path | Description |
 |--------|------|-------------|
+| `ClawdTeeAgent` | `src/agents/clawd.ts` | 🦞 Private Solana AI agent — sealed converse + shielded trade |
+| `InMemoryClawdAccount` | `src/agents/clawd.ts` | Reference `ShieldedAccountLike` + `PrivateSwapRouterLike` for demos/tests |
+| `verifyClawdQuote` | `src/agents/clawd.ts` | Verify a Clawd's TEE quote before opening a channel |
 | `ConfidentialAgent` | `src/agents/confidential-agent.ts` | Agent lifecycle: spawn, seal, infer |
+| `ConfidentialInferenceClient` | `src/inference/client.ts` | Client-side sealed-inference + x402-pay flow |
+| `LocalEnclaveProvider` | `src/inference/client.ts` | In-process enclave provider (dev/test) |
+| `HttpInferenceProvider` | `src/inference/client.ts` | POSTs sealed envelopes to a remote TEE endpoint |
 | `DarkAttestationService` | `src/attestation/service.ts` | SAS credential / schema / attestation management |
-| `DarkTEEAttestation` | `src/attestation/tee.ts` | SGX/TDX quote parsing and verification |
-| `X402PaymentClient` | `src/payments/x402.ts` | x402 shielded payment flow |
-| `InferenceClient` | `src/inference/` | Provider-agnostic sealed inference |
+| `verifyTeeQuote` | `src/attestation/tee.ts` | Provider, measurement, freshness, and signature checks |
+| `LocalSignerPayer` | `src/payments/x402.ts` | Dev `PrivatePayer` — signs `dark-shielded` x402 authorizations |
 | `DARK_SCHEMAS` | `src/attestation/schemas.ts` | `DarkAgentIdentity` + `DarkInferenceReceipt` SAS schemas |
+| `PAYMENT_ASSETS`, `PROGRAMS` | `src/config.ts` | Mint addresses (USDC, SOL) + on-chain program IDs |
 | CLI `dark-tee` | `src/cli.ts` | `dark-tee spawn` / `dark-tee infer` commands |
 
 <details>
@@ -379,6 +467,113 @@ npm run build:terminal   # compile to dist/
 node packages/terminal/dist/terminal/index.js
 ```
 
+| Entry point | File | Description |
+|-------------|------|-------------|
+| Terminal main loop | `index.ts` | Interactive menu — wallet, swap, agents, dashboards |
+| DarkSwap UI surface | `dark-swap-ui.ts` | Terminal UI for the swap flow |
+| Wallet manager | `dark-wallet-manager.ts` | Wallet lifecycle helpers |
+| Gemini agent | `enhanced-google-ai-agent.ts`, `google-ai-agent.ts` | In-terminal AI assistant |
+| x402 agents | `x402-agents.ts` | x402 payment-aware agent harnesses |
+| x402 price WebSocket | `x402-price-websocket.ts` | Live price feed over WS |
+| x402 dashboards | `x402-dashboard-launcher.ts`, `x402-token-dashboard.ts`, `x402-terminal.ts` | Portfolio dashboards |
+| Phoenix perps | `phoenix-perps.ts` | Phoenix perp DEX integration |
+| Web bridge | `web/` | Web-side surface for the terminal |
+
+---
+
+### 🦞 `dark-defi` — [packages/dark-defi/](packages/dark-defi/)
+
+> The umbrella meta-package. One install, the whole stack.
+
+**Published:** [![npm](https://img.shields.io/npm/v/dark-defi?color=00ff41&style=flat-square)](https://www.npmjs.com/package/dark-defi)
+
+```bash
+npm install dark-defi
+```
+
+```javascript
+const { ShieldedWallet, ClawdTeeAgent, DarkAttestationService, PACKAGES, VERSION } =
+  require('dark-defi');
+```
+
+Re-exports everything from `@openclawdsol/dark-protocol`,
+`@openclawdsol/dark-protocol-sdk`, `@openclawdsol/dark-tee-agents`, and
+`sas-lib`. Use it when you want one dep instead of four.
+
+---
+
+### 🦞 `@openclawdsol/dark-protocol` — [packages/protocol/](packages/protocol/)
+
+> Low-level Solana client + AI manager. Lighter than the SDK; no React, no rollup bundle.
+
+| File | Exports |
+|------|---------|
+| `client.ts` | `DarkProtocolClient` — connection factory |
+| `wallet.ts` | `DarkWallet` — keypair + shielding helpers |
+| `privacy.ts` | `PrivacyUtils` — ephemeral addresses, unlinkability |
+| `swap.ts` | Swap routing primitives |
+| `ai-agent.ts` | `AIAgentManager` — multi-provider agent orchestration |
+| `sapling.ts` | Sapling key primitives (TS port) |
+| `note-encryption.ts` | ChaCha20-Poly1305 note encryption |
+| `config.ts` | Program IDs + network defaults |
+
+---
+
+### 🦞 Anchor program — [dark-protocol-program/](dark-protocol-program/)
+
+> The on-chain settlement layer. Anchor 0.32.1 / Rust.
+
+| Instruction | Purpose |
+|-------------|---------|
+| `deposit` | Shield SOL — stores a Sapling-encrypted note commitment on-chain |
+| `withdraw` | Reveal nullifier, redeem SOL (double-spend protected by PDA) |
+| `shielded_transfer` | Spend one note → create payment + change output notes |
+
+```bash
+# Build + deploy
+cd dark-protocol-program
+anchor build
+bash deploy-devnet.sh        # or deploy-mainnet.sh (requires funded wallet)
+```
+
+**Program ID:** `E8zL7h9qHjC7sMf2WCYhdqS5iLkYhPJ9yAhTfevo74jm` (devnet built · mainnet pending)
+
+---
+
+### 🦞 `darkswap` — [darkswap/](darkswap/)
+
+> Next.js front-end for the shielded swap. Wallet adapter, Convex backend hooks, framer-motion matrix animations.
+
+```bash
+cd darkswap
+npm install --legacy-peer-deps
+npm run dev    # http://localhost:3333
+```
+
+| Path | Description |
+|------|-------------|
+| `src/` | Next.js app router + components |
+| `convex/` | Convex backend functions for off-chain state |
+| `next.config.ts` | Next 16 configuration |
+| `vercel.json` | One-click Vercel deploy template |
+
+The CI builds `darkswap` on every push (`.github/workflows/ci.yml`).
+
+---
+
+## 🗺 Package map at a glance
+
+| Name | Path | Scope | Status |
+|------|------|-------|--------|
+| `@openclawdsol/dark-protocol-sdk` | `packages/sdk/` | SDK — shielded wallet, swaps, oracle | ✅ Published |
+| `@openclawdsol/dark-tee-agents` | `packages/tee-agents/` | TEE agents + **Clawd** | ✅ Published |
+| `@openclawdsol/dark-protocol` | `packages/protocol/` | Low-level protocol primitives | ✅ Published |
+| `dark-defi` | `packages/dark-defi/` | Umbrella meta-package | ✅ Published |
+| `sas-lib` | `packages/sas-lib/` | SAS client + Dark schemas | 🔒 Local workspace |
+| `dark-x402-terminal` | `packages/terminal/` | Interactive cypherpunk CLI | ✅ Published |
+| `dark_protocol_program` | `dark-protocol-program/` | Anchor on-chain program | 🟡 Built — mainnet pending |
+| `darkswap` | `darkswap/` | Next.js front-end | 🟢 Dev (Vercel-ready) |
+
 ---
 
 ## 🔑 Key Hierarchy (Zcash Sapling — TypeScript)
@@ -412,7 +607,7 @@ Optional: Jupiter, Birdeye, Google AI, RedPill API keys for live trading + infer
 ### Clone & Build
 
 ```bash
-git clone https://github.com/8bitsats/darkterminal.git
+git clone https://github.com/x402agent/dark-defi.git
 cd darkterminal
 npm install        # installs all workspaces + sas-lib symlink
 npm run build      # sas-lib → sdk → tee-agents → terminal
@@ -448,6 +643,7 @@ node packages/tee-agents/dist/demo.js    # direct demo runner
 | `npm run build:terminal` | Build the CLI only |
 | `npm run terminal` | Launch CLI in dev mode (ts-node) |
 | `npm run tee:demo` | Run TEE agent offline demo |
+| `npm run clawd:demo` | 🦞 Run Clawd (private converse + shielded trade) offline demo |
 | `npm run clean` | Wipe all `dist/` and `node_modules/` |
 
 ---
@@ -483,6 +679,7 @@ The Dark Protocol Anchor program (`dark_protocol_program`) is fully implemented 
 | 🦞 Multi-source price oracle (Birdeye + Jup) | ✅ Implemented |
 | 🦞 Terminal CLI (Figlet, Inquirer, ora) | ✅ Working |
 | 🦞 TEE agent — spawn, attest, pay (x402), infer | ✅ Demo + live modes |
+| 🦞 **Clawd** — private Solana AI: sealed converse + shielded trade | ✅ Demo + ready for production model providers |
 | 🦞 SAS client (`sas-lib`) local workspace | ✅ Built from SAS source |
 | 🦞 Rust Anchor program — deposit / withdraw / shielded_transfer | ✅ Built · ID: `E8zL7h9qHjC7sMf2WCYhdqS5iLkYhPJ9yAhTfevo74jm` |
 | 🌑 ZK-SNARK circuits (Groth16 proofs) | 📋 Roadmap |
@@ -574,7 +771,7 @@ Layer 7 ─── 🤖 AI Agents in TEE
 ## 🤝 Contributing
 
 ```bash
-git clone https://github.com/8bitsats/darkterminal.git
+git clone https://github.com/x402agent/dark-defi.git
 cd darkterminal
 git checkout -b feat/your-feature
 npm install && npm run build

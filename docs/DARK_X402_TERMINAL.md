@@ -19,7 +19,7 @@ The **Dark X402 Terminal** is a command-line interface for privacy-preserving De
 ## 📂 Project Structure
 
 ```
-/Users/8bit/dark defi terminal/
+<path-to>/Dark-Defi/packages/terminal/
 │
 ├── Protocol/                          # Dark Protocol SDK
 │   ├── ai-agent.ts                   # AI agent manager

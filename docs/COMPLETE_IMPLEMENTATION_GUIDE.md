@@ -97,7 +97,7 @@ Zcash-style encrypted notes:
 ### Step 1: Build Solana Programs
 
 ```bash
-cd /Users/8bit/Downloads/ClaudeCash-master/dark-protocol
+cd <path-to>/Dark-Defi
 
 # Build programs
 cargo build-sbf --manifest-path programs/dark-protocol/Cargo.toml
@@ -155,7 +155,7 @@ if (plaintext) {
 The browser extension is ready for integration:
 
 ```bash
-cd /Users/8bit/Downloads/ClaudeCash-master/browser-extension-master
+cd <path-to>/Dark-Defi/extension
 
 # Install dependencies
 npm install

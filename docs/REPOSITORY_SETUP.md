@@ -2,7 +2,7 @@
 
 ## 📦 Repository Created Successfully
 
-**Location:** `/Users/8bit/Downloads/DarkProtocol`
+**Location:** `<path-to>/Dark-Defi`
 
 This is a clean, organized repository containing only the Dark Protocol project with all external dependencies removed.
 
@@ -105,7 +105,7 @@ DarkProtocol/
 To push this to GitHub:
 
 ```bash
-cd /Users/8bit/Downloads/DarkProtocol
+cd <path-to>/Dark-Defi
 
 # Create repo on GitHub, then:
 git remote add origin https://github.com/YOUR_USERNAME/dark-protocol.git
@@ -131,7 +131,7 @@ git push -u origin main
 ### Build
 
 ```bash
-cd /Users/8bit/Downloads/DarkProtocol
+cd <path-to>/Dark-Defi
 anchor build
 ```
 

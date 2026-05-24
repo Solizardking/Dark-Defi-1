@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
-magicblock-engine-examples-main
+
+# Vendored upstream — fetch separately, never commit
+magicblock-engine-examples-main/
+
 # Secrets & credentials — NEVER commit these
 .secrets/
 .env
@@ -11,11 +14,16 @@ client_secret_*.json
 x402-*.json
 *-keypair.json
 id.json
-.npmrc          # contains npm auth token — store in CI secret, not in git
+
+# npm publish token — store in CI secret (NODE_AUTH_TOKEN), not in git
+.npmrc
+.npmrc.local
 .npm
+
 # Build outputs — allow SDK dist/ (needed for npm publish) and darkswap
 build/
 *.tsbuildinfo
+
 # Ignore dist everywhere except the published SDK
 dist/
 !packages/sdk/dist/
@@ -26,6 +34,7 @@ dark-protocol-program/.anchor/
 
 # DarkSwap Next.js build
 darkswap/.next/
+
 # Compiled output emitted next to TypeScript source
 packages/protocol/**/*.js
 packages/protocol/**/*.js.map
@@ -48,4 +57,6 @@ yarn-error.log*
 .vscode/
 *.swp
 Thumbs.db
-.claude/          # project-local Claude Code settings (may contain tokens)
+
+# Project-local Claude Code settings — may contain personal tokens or paths
+.claude/

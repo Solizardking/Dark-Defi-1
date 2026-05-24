@@ -15,3 +15,4 @@ export * from "./attestation/service.js";
 export * from "./payments/x402.js";
 export * from "./inference/client.js";
 export * from "./agents/confidential-agent.js";
+export * from "./agents/clawd.js";

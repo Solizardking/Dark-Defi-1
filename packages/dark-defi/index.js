@@ -2,27 +2,27 @@
  * dark-defi — Official Dark DeFi SDK meta-package
  * Privacy-first Solana DeFi suite
  *
- * Re-exports everything from the Dark DeFi ecosystem:
- *  - @openclawdsolana/dark-protocol  → on-chain types & ABIs
- *  - @openclawdsolana/dark-sdk       → full privacy SDK
- *  - @openclawdsolana/dark-tee-agents → TEE-attested AI agents
- *  - sas-lib                         → Solana Attestation Service client
+ * Re-exports the core Dark DeFi packages so users can `npm install dark-defi`
+ * and get the full stack:
+ *
+ *   - @openclawdsol/dark-protocol-sdk  → shielded wallet, swaps, oracle
+ *   - @openclawdsol/dark-tee-agents    → TEE-attested AI agents (Clawd, ConfidentialAgent)
+ *   - @openclawdsol/dark-protocol      → low-level protocol primitives
+ *   - sas-lib                          → Solana Attestation Service client + Dark schemas
  */
 
 'use strict';
 
-// Re-export sub-packages for convenience
-// Users can also install the individual packages directly.
-try { Object.assign(exports, require('@openclawdsolana/dark-protocol')); } catch (_) {}
-try { Object.assign(exports, require('@openclawdsolana/dark-sdk')); } catch (_) {}
-try { Object.assign(exports, require('@openclawdsolana/dark-tee-agents')); } catch (_) {}
+try { Object.assign(exports, require('@openclawdsol/dark-protocol')); } catch (_) {}
+try { Object.assign(exports, require('@openclawdsol/dark-protocol-sdk')); } catch (_) {}
+try { Object.assign(exports, require('@openclawdsol/dark-tee-agents')); } catch (_) {}
 try { Object.assign(exports, require('sas-lib')); } catch (_) {}
 
-exports.VERSION = '0.2.0';
+exports.VERSION = '0.2.1';
 exports.PACKAGES = {
-  protocol: '@openclawdsolana/dark-protocol',
-  sdk:      '@openclawdsolana/dark-sdk',
-  tee:      '@openclawdsolana/dark-tee-agents',
+  protocol: '@openclawdsol/dark-protocol',
+  sdk:      '@openclawdsol/dark-protocol-sdk',
+  tee:      '@openclawdsol/dark-tee-agents',
   sas:      'sas-lib',
   terminal: 'dark-x402-terminal',
 };

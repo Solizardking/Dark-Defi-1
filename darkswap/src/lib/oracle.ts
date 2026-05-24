@@ -1,8 +1,8 @@
 import type { OraclePrice, OracleValidation, SwapQuote } from "@/types";
 import { getTokenByAddress } from "@/lib/tokens";
+import { getJupiterPrice } from "@/lib/jupiter";
 
 const BIRDEYE_BASE = "https://public-api.birdeye.so";
-const JUP_PRICE_BASE = "https://price.jup.ag/v4";
 const REQUEST_TIMEOUT_MS = 4_000;
 
 export async function fetchBirdeyePrice(
@@ -27,13 +27,8 @@ export async function fetchBirdeyePrice(
 
 export async function fetchJupiterPrice(mint: string): Promise<number | null> {
   try {
-    const res = await fetch(`${JUP_PRICE_BASE}/price?ids=${mint}`, {
-      next: { revalidate: 10 },
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data?.data?.[mint]?.price ?? null;
+    const prices = await getJupiterPrice([mint]);
+    return prices[mint] ?? null;
   } catch {
     return null;
   }

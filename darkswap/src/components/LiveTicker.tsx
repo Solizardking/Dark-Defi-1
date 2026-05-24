@@ -30,18 +30,16 @@ export function LiveTicker() {
     const fetchPrices = async () => {
       try {
         const mints = SEED_TICKS.map((t) => t.mint).join(",");
-        const res = await fetch(
-          `https://api.jup.ag/price/v2?ids=${mints}`,
-          { signal: AbortSignal.timeout(4000) }
-        );
+        const params = new URLSearchParams({ mints });
+        const res = await fetch(`/api/oracle?${params}`, { signal: AbortSignal.timeout(4000) });
         if (!res.ok) return;
         const json = await res.json();
         if (!mountedRef.current) return;
         setTicks((prev) =>
           prev.map((t) => {
-            const d = json?.data?.[t.mint];
-            if (!d) return t;
-            return { ...t, price: parseFloat(d.price ?? "0") };
+            const price = Number(json?.prices?.[t.mint]);
+            if (!Number.isFinite(price) || price <= 0) return t;
+            return { ...t, price };
           })
         );
       } catch {

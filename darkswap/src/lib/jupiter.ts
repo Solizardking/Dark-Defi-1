@@ -187,15 +187,18 @@ export async function getJupiterSwapTransaction(
 }
 
 export async function getJupiterPrice(mints: string[]): Promise<Record<string, number>> {
-  const ids = mints.join(",");
-  const res = await fetch(`https://price.jup.ag/v4/price?ids=${ids}`, {
+  const params = new URLSearchParams({ ids: mints.join(",") });
+  const res = await fetch(`https://api.jup.ag/price/v3?${params}`, {
+    headers: jupHeaders(),
+    next: { revalidate: 10 },
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
   if (!res.ok) return {};
   const data = await res.json();
   const prices: Record<string, number> = {};
-  for (const [mint, info] of Object.entries(data.data ?? {})) {
-    prices[mint] = (info as { price: number }).price;
+  for (const [mint, info] of Object.entries(data ?? {})) {
+    const price = Number((info as { usdPrice?: number | string }).usdPrice);
+    if (Number.isFinite(price)) prices[mint] = price;
   }
   return prices;
 }

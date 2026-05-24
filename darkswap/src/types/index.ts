@@ -30,8 +30,8 @@ export interface RoutePlan {
     outputMint: string;
     inAmount: string;
     outAmount: string;
-    feeAmount: string;
-    feeMint: string;
+    feeAmount?: string;
+    feeMint?: string;
   };
   percent: number;
 }
@@ -95,6 +95,27 @@ export interface QuoteApiResponse {
   quote: SwapQuote;
   oracle: OracleValidation;
   safety: SafetyCheck;
+  source?: string;
+  router?: string;
+}
+
+export interface SwapApiResponse {
+  transaction: string;
+  requestId?: string;
+  outAmount: string;
+  router: string;
+  sponsored: boolean;
+  hasSponsored?: boolean;
+  error?: string;
+}
+
+export interface ExecuteApiResponse {
+  status: "Success" | "Failed";
+  signature: string;
+  code: number;
+  inputAmountResult: string;
+  outputAmountResult: string;
+  error?: string;
 }
 
 // ── Shielded wallet types (Dark Protocol SDK) ────────────────────────────────

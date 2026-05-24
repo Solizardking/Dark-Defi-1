@@ -1,9 +1,15 @@
 import type { SwapQuote } from "@/types";
 
-const JUP_API =
+// ── v1 (Metis) — kept for oracle/safety quote preview ────────────────────────
+
+const JUP_V1 =
   process.env.JUPITER_ENDPOINT
     ? `${process.env.JUPITER_ENDPOINT}/v6`
     : "https://quote-api.jup.ag/v6";
+
+// ── v2 Meta-Aggregator — order+execute flow ───────────────────────────────────
+
+const JUP_V2 = "https://api.jup.ag/swap/v2";
 
 function jupHeaders(): HeadersInit {
   const h: HeadersInit = { "Content-Type": "application/json" };
@@ -12,11 +18,46 @@ function jupHeaders(): HeadersInit {
   return h;
 }
 
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+export interface JupiterOrderResponse {
+  transaction: string | null;
+  requestId: string;
+  outAmount: string;
+  inAmount: string;
+  inputMint: string;
+  outputMint: string;
+  otherAmountThreshold: string;
+  slippageBps: number;
+  priceImpactPct: string;
+  priceImpact: number;
+  router: "iris" | "jupiterz" | "dflow" | "okx";
+  mode: "ultra" | "manual";
+  feeBps: number;
+  feeMint: string;
+  routePlan: SwapQuote["routePlan"];
+  platformFee?: { amount: string; feeBps: number; feeMint: string };
+  errorCode?: number;
+  errorMessage?: string;
+}
+
+export interface JupiterExecuteResponse {
+  status: "Success" | "Failed";
+  signature: string;
+  slot?: string;
+  code: number;
+  inputAmountResult: string;
+  outputAmountResult: string;
+  error?: string;
+}
+
+// ── v1: quote only (for oracle price validation preview) ──────────────────────
+
 export async function getJupiterQuote(
   inputMint: string,
   outputMint: string,
   amount: string,
-  slippageBps: number = 50
+  slippageBps = 50
 ): Promise<SwapQuote> {
   const params = new URLSearchParams({
     inputMint,
@@ -27,7 +68,7 @@ export async function getJupiterQuote(
     asLegacyTransaction: "false",
   });
 
-  const res = await fetch(`${JUP_API}/quote?${params}`, {
+  const res = await fetch(`${JUP_V1}/quote?${params}`, {
     headers: jupHeaders(),
     next: { revalidate: 0 },
   });
@@ -39,6 +80,74 @@ export async function getJupiterQuote(
 
   return res.json();
 }
+
+// ── v2: get order (quote + assembled tx, all routers compete) ─────────────────
+
+export async function getJupiterOrder(
+  inputMint: string,
+  outputMint: string,
+  amount: string,
+  slippageBps = 50,
+  taker?: string
+): Promise<JupiterOrderResponse> {
+  const params = new URLSearchParams({ inputMint, outputMint, amount });
+  if (slippageBps) params.set("slippageBps", slippageBps.toString());
+  if (taker) params.set("taker", taker);
+
+  const res = await fetch(`${JUP_V2}/order?${params}`, {
+    headers: jupHeaders(),
+    next: { revalidate: 0 },
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Jupiter /order failed (${res.status}): ${err}`);
+  }
+
+  const data = await res.json();
+
+  // Normalise priceImpact → priceImpactPct string for backward compat
+  return {
+    ...data,
+    priceImpactPct: data.priceImpactPct ?? String(Math.abs(data.priceImpact ?? 0) * 100),
+    routePlan: (data.routePlan ?? []).map((r: Record<string, unknown>) => ({
+      ...r,
+      swapInfo: {
+        ammKey: (r.swapInfo as Record<string, string>)?.ammKey ?? "",
+        label: (r.swapInfo as Record<string, string>)?.label ?? "",
+        inputMint: (r.swapInfo as Record<string, string>)?.inputMint ?? inputMint,
+        outputMint: (r.swapInfo as Record<string, string>)?.outputMint ?? outputMint,
+        inAmount: (r.swapInfo as Record<string, string>)?.inAmount ?? amount,
+        outAmount: (r.swapInfo as Record<string, string>)?.outAmount ?? data.outAmount ?? "0",
+        feeAmount: (r.swapInfo as Record<string, string>)?.feeAmount,
+        feeMint: (r.swapInfo as Record<string, string>)?.feeMint,
+      },
+      percent: (r as Record<string, number>).percent ?? 100,
+    })),
+  };
+}
+
+// ── v2: execute signed transaction (Jupiter handles landing + confirm) ─────────
+
+export async function executeJupiterOrder(
+  signedTransaction: string,
+  requestId: string
+): Promise<JupiterExecuteResponse> {
+  const res = await fetch(`${JUP_V2}/execute`, {
+    method: "POST",
+    headers: jupHeaders(),
+    body: JSON.stringify({ signedTransaction, requestId }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Jupiter /execute failed (${res.status}): ${err}`);
+  }
+
+  return res.json();
+}
+
+// ── v1: build swap tx (kept for RPC-direct path, e.g. sponsored swaps) ────────
 
 export async function getJupiterSwapTransaction(
   quote: SwapQuote,
@@ -58,7 +167,7 @@ export async function getJupiterSwapTransaction(
     asLegacyTransaction: options?.asLegacyTransaction ?? false,
   };
 
-  const res = await fetch(`${JUP_API}/swap`, {
+  const res = await fetch(`${JUP_V1}/swap`, {
     method: "POST",
     headers: jupHeaders(),
     body: JSON.stringify(body),

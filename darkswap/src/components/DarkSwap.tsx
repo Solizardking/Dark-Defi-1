@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { VersionedTransaction, Transaction } from "@solana/web3.js";
+import { VersionedTransaction, type Connection } from "@solana/web3.js";
 import toast from "react-hot-toast";
 
 import { TokenLogo } from "./TokenLogo";
@@ -18,12 +18,82 @@ import { SafetyModal } from "./SafetyModal";
 import { PrivacyBar } from "./PrivacyBar";
 import { EphemeralPanel } from "./EphemeralPanel";
 import { ShieldedWalletPanel } from "./ShieldedWalletPanel";
+import { SwapHistoryPanel } from "./SwapHistoryPanel";
 import { SwapProgress, SuccessBurst } from "./SwapProgress";
+import { LobsterLogo, BuyClawdButton } from "./LobsterLogo";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 import { WSOL, USDC, formatAmount, parseAmount } from "@/lib/tokens";
-import type { Token, SwapState, QuoteApiResponse, ProgressStep } from "@/types";
+import type { Token, SwapState, QuoteApiResponse, SwapApiResponse, ExecuteApiResponse, ProgressStep } from "@/types";
 
 const SLIPPAGE_OPTIONS = [10, 50, 100, 200];
+
+// ── Module-level swap execution helpers ──────────────────────────────────────
+
+async function buildSwapTx(
+  inputMint: string, outputMint: string, inAmount: string,
+  taker: string, slippageBps: number,
+): Promise<SwapApiResponse> {
+  const res = await fetch("/api/swap", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ inputMint, outputMint, amount: inAmount, taker, slippageBps }),
+  });
+  const data: SwapApiResponse & { error?: string } = await res.json();
+  if (!res.ok || data.error) throw new Error(data.error ?? "Failed to build swap transaction");
+  return data;
+}
+
+async function executeViaJupiter(signed: VersionedTransaction, requestId: string): Promise<string> {
+  const res = await fetch("/api/execute", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      signedTransaction: Buffer.from(signed.serialize()).toString("base64"),
+      requestId,
+    }),
+  });
+  const data: ExecuteApiResponse & { error?: string } = await res.json();
+  if (!res.ok || data.error || data.status !== "Success")
+    throw new Error(data.error ?? `Execute failed (code ${data.code})`);
+  return data.signature;
+}
+
+async function executeViaRpc(signed: VersionedTransaction, connection: Connection): Promise<string> {
+  const sig = await connection.sendRawTransaction(signed.serialize(), { skipPreflight: false, maxRetries: 3 });
+  const conf = await connection.confirmTransaction(sig, "confirmed");
+  if (conf.value.err) throw new Error(`Transaction failed: ${JSON.stringify(conf.value.err)}`);
+  return sig;
+}
+
+type RecordSwapFn = (args: {
+  walletAddress: string; inputMint: string; outputMint: string;
+  inputSymbol: string; outputSymbol: string; inputAmount: string;
+  outputAmount: string; txSignature: string; slippageBps: number;
+  priceImpactPct: string; source: string; route: string;
+  privacyEnabled: boolean; ephemeralEnabled: boolean;
+}) => Promise<unknown>;
+
+function persistSwap(fn: RecordSwapFn, sig: string, router: string, state: SwapState, walletAddress: string, ephemeralEnabled: boolean) {
+  const route = state.quote?.routePlan.map((r) => r.swapInfo.label).filter(Boolean).slice(0, 3).join(" → ") ?? "";
+  fn({
+    walletAddress,
+    inputMint: state.inputToken?.address ?? "",
+    outputMint: state.outputToken?.address ?? "",
+    inputSymbol: state.inputToken?.symbol ?? "",
+    outputSymbol: state.outputToken?.symbol ?? "",
+    inputAmount: state.inputAmount,
+    outputAmount: state.outputAmount,
+    txSignature: sig,
+    slippageBps: state.slippageBps,
+    priceImpactPct: state.quote?.priceImpactPct ?? "",
+    source: router,
+    route,
+    privacyEnabled: state.privacyEnabled,
+    ephemeralEnabled,
+  }).catch(() => { /* non-critical */ });
+}
 
 export function DarkSwap() {
   const { publicKey, signTransaction, connected } = useWallet();
@@ -58,6 +128,9 @@ export function DarkSwap() {
   const [progressStep, setProgressStep] = useState<ProgressStep>("idle");
   const [showBurst, setShowBurst] = useState(false);
   const [swapArrowFlipped, setSwapArrowFlipped] = useState(false);
+
+  const recordSwap = useMutation(api.swaps.recordSwap);
+  const quoteSourceRef = useRef<string>("jupiter");
 
   const quoteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [quoteAge, setQuoteAge] = useState(0);
@@ -99,6 +172,7 @@ export function DarkSwap() {
 
       const outAmount = formatAmount(data.quote.outAmount, outputToken.decimals);
       quoteTimestampRef.current = Date.now();
+      quoteSourceRef.current = (data as QuoteApiResponse & { source?: string }).source ?? "jupiter";
 
       setState((s) => ({
         ...s,
@@ -186,63 +260,45 @@ export function DarkSwap() {
     const toastId = toast.loading("Building transaction...");
 
     try {
-      // Step 1: Build tx
       setProgressStep("signing");
-      const swapRes = await fetch("https://quote-api.jup.ag/v6/swap", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          quoteResponse: state.quote,
-          userPublicKey: publicKey.toString(),
-          wrapAndUnwrapSol: true,
-          prioritizationFeeLamports: "auto",
-        }),
-      });
+      const swapData = await buildSwapTx(
+        state.inputToken?.address ?? "",
+        state.outputToken?.address ?? "",
+        state.quote.inAmount,
+        publicKey.toString(),
+        state.slippageBps,
+      );
+      const { transaction, requestId, sponsored } = swapData;
+      const router = swapData.router ?? quoteSourceRef.current;
 
-      if (!swapRes.ok) throw new Error("Failed to build swap transaction");
-      const { swapTransaction } = await swapRes.json();
-
-      const txBuf = Buffer.from(swapTransaction, "base64");
-      let tx: VersionedTransaction | Transaction;
-      try {
-        tx = VersionedTransaction.deserialize(txBuf);
-      } catch {
-        tx = Transaction.from(txBuf);
-      }
-
-      // Step 2: Sign
+      const tx = VersionedTransaction.deserialize(Buffer.from(transaction, "base64"));
       toast.loading("Sign in wallet...", { id: toastId });
-      const signed = await signTransaction(tx as VersionedTransaction);
+      const signed = await signTransaction(tx);
 
-      // Step 3: Send
       setProgressStep("sending");
-      toast.loading("Broadcasting to Solana...", { id: toastId });
       let sig: string;
-      if (signed instanceof VersionedTransaction) {
-        sig = await connection.sendRawTransaction(signed.serialize(), { skipPreflight: false, maxRetries: 3 });
+      if (requestId) {
+        toast.loading("Broadcasting via Jupiter...", { id: toastId });
+        sig = await executeViaJupiter(signed, requestId);
       } else {
-        sig = await connection.sendRawTransaction((signed as Transaction).serialize(), { skipPreflight: false, maxRetries: 3 });
+        toast.loading("Broadcasting to Solana...", { id: toastId });
+        sig = await executeViaRpc(signed, connection);
       }
 
-      // Step 4: Confirm
-      setProgressStep("confirming");
-      toast.loading("Confirming on-chain...", { id: toastId });
-      const conf = await connection.confirmTransaction(sig, "confirmed");
-      if (conf.value.err) throw new Error(`Transaction failed: ${JSON.stringify(conf.value.err)}`);
-
-      // Success!
       setProgressStep("success");
       setShowBurst(true);
       setTimeout(() => setShowBurst(false), 1000);
-      toast.success("🌑 Swap complete!", { id: toastId, duration: 4000 });
+      toast.success(`🌑 Swap complete via ${router}${sponsored ? " (gasless)" : ""}!`, { id: toastId, duration: 4000 });
       setState((s) => ({ ...s, status: "success", txSignature: sig, inputAmount: "", outputAmount: "", quote: null }));
+
+      persistSwap(recordSwap, sig, router, state, publicKey.toString(), ephemeralEnabled);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Swap failed";
       toast.error(msg, { id: toastId });
       setState((s) => ({ ...s, status: "error", error: msg }));
       setProgressStep("error");
     }
-  }, [state.quote, publicKey, signTransaction, connection]);
+  }, [state, publicKey, signTransaction, connection, recordSwap, ephemeralEnabled]);
 
   const handleSwapClick = useCallback(() => {
     if (!state.safetyCheck || state.safetyCheck.safe) executeSwap();
@@ -314,15 +370,19 @@ export function DarkSwap() {
 
           {/* Header */}
           <div className="flex items-center justify-between mb-4 relative z-10">
-            <div>
-              <h1 className="text-base font-bold gradient-text-cyan tracking-wider anim-flicker">
-                DARK SWAP
-              </h1>
-              <p className="text-[10px] text-slate-600 mt-0.5 tracking-widest">
-                Privacy-first DEX aggregation
-              </p>
+            <div className="flex items-center gap-2">
+              <LobsterLogo size={36} />
+              <div>
+                <h1 className="text-base font-bold gradient-text-cyan tracking-wider anim-flicker">
+                  DARK SWAP
+                </h1>
+                <p className="text-[10px] text-slate-600 mt-0.5 tracking-widest">
+                  Privacy-first DEX · 🦞 powered
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
+              <BuyClawdButton />
               {state.quote && (
                 <motion.button
                   whileTap={{ scale: 0.9 }}
@@ -551,6 +611,13 @@ export function DarkSwap() {
           </AnimatePresence>
         </div>
       </motion.div>
+
+      {/* Swap history — persistent, shown below the card when connected */}
+      {connected && publicKey && (
+        <div className="w-full max-w-md mx-auto mt-3">
+          <SwapHistoryPanel walletAddress={publicKey.toString()} />
+        </div>
+      )}
 
       {/* Modals */}
       <TokenModal

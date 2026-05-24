@@ -551,47 +551,54 @@ export function DarkSwap() {
             txSignature={state.txSignature}
           />
 
-          {/* Swap button */}
-          <motion.button
-            whileTap={connected && canSwap ? { scale: 0.98 } : {}}
-            onClick={connected ? handleSwapClick : undefined}
-            disabled={connected && (
-              state.status === "swapping" ||
-              state.status === "quoting" ||
-              (!canSwap && state.status !== "success" && state.status !== "error")
-            )}
-            className={`mt-4 w-full py-3.5 rounded-xl text-sm font-bold tracking-wider transition-all disabled:opacity-60 disabled:cursor-not-allowed ${swapBtnClass}`}
-          >
-            {state.status === "quoting" || state.status === "swapping" ? (
-              <span className="flex items-center justify-center gap-2">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+          {/* Connect wallet (disconnected state — standalone, never nested in button) */}
+          {!connected && (
+            <WalletMultiButton
+              className="mt-4 w-full !py-3.5 !rounded-xl !text-sm !font-bold !tracking-wider swap-btn-ready !justify-center !h-auto"
+            />
+          )}
+
+          {/* Swap button (connected state only) */}
+          {connected && (
+            <motion.button
+              whileTap={canSwap ? { scale: 0.98 } : {}}
+              onClick={handleSwapClick}
+              disabled={
+                state.status === "swapping" ||
+                state.status === "quoting" ||
+                (!canSwap && state.status !== "success" && state.status !== "error")
+              }
+              className={`mt-4 w-full py-3.5 rounded-xl text-sm font-bold tracking-wider transition-all disabled:opacity-60 disabled:cursor-not-allowed ${swapBtnClass}`}
+            >
+              {state.status === "quoting" || state.status === "swapping" ? (
+                <span className="flex items-center justify-center gap-2">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                  >
+                    <Loader2 size={15} />
+                  </motion.div>
+                  {swapBtnLabel}
+                </span>
+              ) : state.status === "success" ? (
+                <motion.span
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="flex items-center justify-center gap-2"
                 >
-                  <Loader2 size={15} />
-                </motion.div>
-                {swapBtnLabel}
-              </span>
-            ) : state.status === "success" ? (
-              <motion.span
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="flex items-center justify-center gap-2"
-              >
-                <CheckCircle2 size={15} />
-                {swapBtnLabel}
-              </motion.span>
-            ) : oracleBlocked ? (
-              <span className="flex items-center justify-center gap-2">
-                <AlertTriangle size={15} />
-                {swapBtnLabel}
-              </span>
-            ) : !connected ? (
-              <WalletMultiButton className="!bg-transparent !border-none !p-0 !w-full !h-auto !text-inherit !font-inherit !text-sm" />
-            ) : (
-              swapBtnLabel
-            )}
-          </motion.button>
+                  <CheckCircle2 size={15} />
+                  {swapBtnLabel}
+                </motion.span>
+              ) : oracleBlocked ? (
+                <span className="flex items-center justify-center gap-2">
+                  <AlertTriangle size={15} />
+                  {swapBtnLabel}
+                </span>
+              ) : (
+                swapBtnLabel
+              )}
+            </motion.button>
+          )}
 
           {/* TX success link */}
           <AnimatePresence>

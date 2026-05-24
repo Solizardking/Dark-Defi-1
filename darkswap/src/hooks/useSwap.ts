@@ -64,6 +64,13 @@ function recordToConvex(
   }).catch(() => { /* non-critical */ });
 }
 
+async function rpcExecute(signed: VersionedTransaction, conn: Connection): Promise<string> {
+  const sig = await conn.sendRawTransaction(signed.serialize(), { skipPreflight: false, maxRetries: 3 });
+  const conf = await conn.confirmTransaction(sig, "confirmed");
+  if (conf.value.err) throw new Error(`Transaction failed: ${JSON.stringify(conf.value.err)}`);
+  return sig;
+}
+
 // ── The hook ──────────────────────────────────────────────────────────────────
 
 export type SwapHook = ReturnType<typeof useSwap>;
@@ -221,9 +228,7 @@ export function useSwap() {
         sig = await jupiterExecute(signed, swapData.requestId);
       } else {
         toast.loading("Broadcasting to Solana...", { id: toastId });
-        sig = await connection.sendRawTransaction(signed.serialize(), { skipPreflight: false, maxRetries: 3 });
-        const conf = await connection.confirmTransaction(sig, "confirmed");
-        if (conf.value.err) throw new Error(`Transaction failed: ${JSON.stringify(conf.value.err)}`);
+        sig = await rpcExecute(signed, connection);
       }
       setProgressStep("success");
       setShowBurst(true);

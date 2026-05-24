@@ -1,0 +1,206 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 200" width="900" height="200">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0f;stop-opacity:1"/>
+      <stop offset="50%" style="stop-color:#0d0d1a;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#050510;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="purpleGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#7b2fff;stop-opacity:0"/>
+      <stop offset="30%" style="stop-color:#a855f7;stop-opacity:1"/>
+      <stop offset="70%" style="stop-color:#7b2fff;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#a855f7;stop-opacity:0"/>
+    </linearGradient>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#c084fc"/>
+      <stop offset="50%" style="stop-color:#e879f9"/>
+      <stop offset="100%" style="stop-color:#7c3aed"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="glowStrong">
+      <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <style>
+      @keyframes scanline {
+        0%   { transform: translateY(-200px); opacity: 0; }
+        10%  { opacity: 0.15; }
+        90%  { opacity: 0.15; }
+        100% { transform: translateY(400px); opacity: 0; }
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 0.3; }
+        50%       { opacity: 1; }
+      }
+      @keyframes shimmer {
+        0%   { transform: translateX(-900px); }
+        100% { transform: translateX(900px); }
+      }
+      @keyframes fadeInUp {
+        0%   { opacity: 0; transform: translateY(20px); }
+        100% { opacity: 1; transform: translateY(0px); }
+      }
+      @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50%       { opacity: 0; }
+      }
+      @keyframes nodeFloat {
+        0%, 100% { transform: translateY(0px); }
+        50%       { transform: translateY(-6px); }
+      }
+      @keyframes orbitA {
+        0%   { transform: rotate(0deg) translateX(60px) rotate(0deg); }
+        100% { transform: rotate(360deg) translateX(60px) rotate(-360deg); }
+      }
+      @keyframes orbitB {
+        0%   { transform: rotate(120deg) translateX(45px) rotate(-120deg); }
+        100% { transform: rotate(480deg) translateX(45px) rotate(-480deg); }
+      }
+      @keyframes orbitC {
+        0%   { transform: rotate(240deg) translateX(30px) rotate(-240deg); }
+        100% { transform: rotate(600deg) translateX(30px) rotate(-600deg); }
+      }
+      @keyframes hexSpin {
+        0%   { transform: rotate(0deg); opacity: 0.15; }
+        50%  { opacity: 0.35; }
+        100% { transform: rotate(360deg); opacity: 0.15; }
+      }
+      @keyframes lineFlow {
+        0%   { stroke-dashoffset: 200; opacity: 0; }
+        30%  { opacity: 1; }
+        70%  { opacity: 1; }
+        100% { stroke-dashoffset: -200; opacity: 0; }
+      }
+      .scanline { animation: scanline 4s linear infinite; }
+      .pulse    { animation: pulse 2s ease-in-out infinite; }
+      .shimmer  { animation: shimmer 3s linear infinite; }
+      .fadeInUp { animation: fadeInUp 1s ease-out forwards; }
+      .blink    { animation: blink 1.2s step-end infinite; }
+      .hexSpin  { animation: hexSpin 20s linear infinite; }
+      .lineFlow { animation: lineFlow 3s linear infinite; }
+      .node-a   { animation: nodeFloat 3s ease-in-out infinite; }
+      .node-b   { animation: nodeFloat 3s ease-in-out infinite 1s; }
+      .node-c   { animation: nodeFloat 3s ease-in-out infinite 2s; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="200" fill="url(#bg)"/>
+
+  <!-- Grid lines -->
+  <g opacity="0.04" stroke="#a855f7" stroke-width="0.5">
+    <line x1="0" y1="40" x2="900" y2="40"/>
+    <line x1="0" y1="80" x2="900" y2="80"/>
+    <line x1="0" y1="120" x2="900" y2="120"/>
+    <line x1="0" y1="160" x2="900" y2="160"/>
+    <line x1="150" y1="0" x2="150" y2="200"/>
+    <line x1="300" y1="0" x2="300" y2="200"/>
+    <line x1="450" y1="0" x2="450" y2="200"/>
+    <line x1="600" y1="0" x2="600" y2="200"/>
+    <line x1="750" y1="0" x2="750" y2="200"/>
+  </g>
+
+  <!-- Scanline effect -->
+  <rect class="scanline" x="0" y="0" width="900" height="3" fill="#a855f7"/>
+
+  <!-- Hex decorations left -->
+  <polygon class="hexSpin" points="55,30 70,40 70,60 55,70 40,60 40,40"
+    fill="none" stroke="#7b2fff" stroke-width="1"
+    style="transform-origin: 55px 50px;"/>
+  <polygon class="hexSpin" points="55,15 80,30 80,60 55,75 30,60 30,30"
+    fill="none" stroke="#7b2fff" stroke-width="0.5"
+    style="transform-origin: 55px 45px; animation-delay: -5s; animation-duration: 30s;"/>
+
+  <!-- Orbital nodes left -->
+  <g style="transform-origin: 55px 45px;">
+    <g class="node-a" style="transform-origin: 55px 45px;">
+      <circle cx="115" cy="45" r="3" fill="#a855f7" filter="url(#glow)"/>
+    </g>
+    <g class="node-b" style="transform-origin: 55px 45px;">
+      <circle cx="30" cy="80" r="2.5" fill="#7c3aed" filter="url(#glow)"/>
+    </g>
+    <g class="node-c" style="transform-origin: 55px 45px;">
+      <circle cx="80" cy="10" r="2" fill="#c084fc" filter="url(#glow)"/>
+    </g>
+  </g>
+
+  <!-- Hex decorations right -->
+  <polygon class="hexSpin" points="845,130 860,140 860,160 845,170 830,160 830,140"
+    fill="none" stroke="#7b2fff" stroke-width="1"
+    style="transform-origin: 845px 150px; animation-delay: -10s;"/>
+  <polygon class="hexSpin" points="845,115 870,130 870,160 845,175 820,160 820,130"
+    fill="none" stroke="#7b2fff" stroke-width="0.5"
+    style="transform-origin: 845px 145px; animation-delay: -3s; animation-duration: 25s;"/>
+
+  <!-- Flowing data lines -->
+  <line class="lineFlow" x1="130" y1="45" x2="300" y2="45"
+    stroke="#7b2fff" stroke-width="1" stroke-dasharray="10 5" opacity="0.6"/>
+  <line class="lineFlow" x1="600" y1="155" x2="820" y2="155"
+    stroke="#7b2fff" stroke-width="1" stroke-dasharray="10 5" opacity="0.6"
+    style="animation-delay: -1.5s;"/>
+
+  <!-- Shimmer bar -->
+  <rect class="shimmer" x="0" y="0" width="200" height="200"
+    fill="url(#purpleGlow)" opacity="0.08"/>
+
+  <!-- Main title -->
+  <text x="450" y="85"
+    font-family="'Courier New', Courier, monospace"
+    font-size="52" font-weight="bold"
+    text-anchor="middle"
+    fill="url(#textGrad)"
+    filter="url(#glowStrong)"
+    class="fadeInUp">
+    DARK PROTOCOL
+  </text>
+
+  <!-- Subtitle -->
+  <text x="450" y="118"
+    font-family="'Courier New', Courier, monospace"
+    font-size="14"
+    text-anchor="middle"
+    fill="#c084fc"
+    opacity="0.85"
+    class="fadeInUp"
+    style="animation-delay: 0.3s; opacity: 0;">
+    On-Chain Shielded Note Pool · Solana · Anchor v0.32
+  </text>
+
+  <!-- Bottom bar -->
+  <rect x="0" y="182" width="900" height="1" fill="url(#purpleGlow)" opacity="0.6"/>
+
+  <!-- Bottom tags -->
+  <text x="450" y="196"
+    font-family="'Courier New', Courier, monospace"
+    font-size="10"
+    text-anchor="middle"
+    fill="#7b2fff"
+    opacity="0.7"
+    class="fadeInUp"
+    style="animation-delay: 0.6s; opacity: 0;">
+    [ ChaCha20-Poly1305 ] · [ Sapling Notes ] · [ Nullifier Sets ] · [ PDA Vaults ]
+  </text>
+
+  <!-- Blinking cursor -->
+  <rect class="blink" x="742" y="73" width="10" height="3" fill="#a855f7"/>
+
+  <!-- Program ID small -->
+  <text x="450" y="152"
+    font-family="'Courier New', Courier, monospace"
+    font-size="9"
+    text-anchor="middle"
+    fill="#4c1d95"
+    class="fadeInUp"
+    style="animation-delay: 0.9s; opacity: 0;">
+    E8zL7h9qHjC7sMf2WCYhdqS5iLkYhPJ9yAhTfevo74jm
+  </text>
+</svg>

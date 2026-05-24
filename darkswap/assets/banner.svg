@@ -1,0 +1,258 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 220" width="900" height="220">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   style="stop-color:#020208"/>
+      <stop offset="50%"  style="stop-color:#050510"/>
+      <stop offset="100%" style="stop-color:#020208"/>
+    </linearGradient>
+    <linearGradient id="cyanGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   style="stop-color:#00f5ff;stop-opacity:0"/>
+      <stop offset="35%"  style="stop-color:#00d4e8;stop-opacity:1"/>
+      <stop offset="65%"  style="stop-color:#00f5ff;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#00f5ff;stop-opacity:0"/>
+    </linearGradient>
+    <linearGradient id="titleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   style="stop-color:#00f5ff"/>
+      <stop offset="50%"  style="stop-color:#38bdf8"/>
+      <stop offset="100%" style="stop-color:#00e5cc"/>
+    </linearGradient>
+    <linearGradient id="matrixGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   style="stop-color:#00ff41;stop-opacity:0.8"/>
+      <stop offset="100%" style="stop-color:#00ff41;stop-opacity:0"/>
+    </linearGradient>
+    <filter id="glowCyan">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowGreen">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowStrong">
+      <feGaussianBlur stdDeviation="7" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <style>
+      @keyframes matrixRain {
+        0%   { transform: translateY(-40px); opacity: 0; }
+        10%  { opacity: 0.7; }
+        80%  { opacity: 0.6; }
+        100% { transform: translateY(260px); opacity: 0; }
+      }
+      @keyframes scanline {
+        0%   { transform: translateY(-5px); opacity: 0; }
+        5%   { opacity: 0.12; }
+        95%  { opacity: 0.12; }
+        100% { transform: translateY(225px); opacity: 0; }
+      }
+      @keyframes shimmerCyan {
+        0%   { transform: translateX(-900px); }
+        100% { transform: translateX(900px); }
+      }
+      @keyframes fadeInUp {
+        0%   { opacity: 0; transform: translateY(18px); }
+        100% { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 0.25; r: 2; }
+        50%       { opacity: 1;    r: 3.5; }
+      }
+      @keyframes orbitDot {
+        0%   { transform: rotate(0deg)   translateX(48px) rotate(0deg); }
+        100% { transform: rotate(360deg) translateX(48px) rotate(-360deg); }
+      }
+      @keyframes orbitDot2 {
+        0%   { transform: rotate(120deg) translateX(36px) rotate(-120deg); }
+        100% { transform: rotate(480deg) translateX(36px) rotate(-480deg); }
+      }
+      @keyframes orbitDot3 {
+        0%   { transform: rotate(240deg) translateX(28px) rotate(-240deg); }
+        100% { transform: rotate(600deg) translateX(28px) rotate(-600deg); }
+      }
+      @keyframes spinHex {
+        0%   { transform: rotate(0deg);   opacity: 0.12; }
+        50%  { opacity: 0.3; }
+        100% { transform: rotate(360deg); opacity: 0.12; }
+      }
+      @keyframes blinkCursor {
+        0%, 100% { opacity: 1; }
+        50%       { opacity: 0; }
+      }
+      @keyframes typeChar {
+        0%, 100% { opacity: 0.3; }
+        50%       { opacity: 1; }
+      }
+      .scanline   { animation: scanline 5s linear infinite; }
+      .shimmer    { animation: shimmerCyan 3.5s linear infinite; }
+      .fadein     { animation: fadeInUp 0.9s ease-out forwards; }
+      .blink      { animation: blinkCursor 1.1s step-end infinite; }
+      .spinHex    { animation: spinHex 18s linear infinite; }
+      .spinHexSlow{ animation: spinHex 28s linear infinite; animation-delay: -9s; }
+    </style>
+  </defs>
+
+  <!-- Background fill -->
+  <rect width="900" height="220" fill="url(#bg)"/>
+
+  <!-- Subtle grid -->
+  <g stroke="#00f5ff" stroke-width="0.3" opacity="0.04">
+    <line x1="0" y1="44" x2="900" y2="44"/>
+    <line x1="0" y1="88" x2="900" y2="88"/>
+    <line x1="0" y1="132" x2="900" y2="132"/>
+    <line x1="0" y1="176" x2="900" y2="176"/>
+    <line x1="180" y1="0" x2="180" y2="220"/>
+    <line x1="360" y1="0" x2="360" y2="220"/>
+    <line x1="540" y1="0" x2="540" y2="220"/>
+    <line x1="720" y1="0" x2="720" y2="220"/>
+  </g>
+
+  <!-- Matrix rain columns (left side) -->
+  <text font-family="'Courier New',monospace" font-size="11" fill="url(#matrixGrad)"
+    style="animation: matrixRain 2.8s linear infinite; transform-origin: 30px 0;">
+    <tspan x="22"  dy="0">0</tspan><tspan x="22"  dy="14">1</tspan><tspan x="22"  dy="14">ア</tspan>
+    <tspan x="22"  dy="14">∑</tspan><tspan x="22" dy="14">0</tspan>
+  </text>
+  <text font-family="'Courier New',monospace" font-size="11" fill="url(#matrixGrad)"
+    style="animation: matrixRain 3.4s linear infinite; animation-delay:-1.1s; transform-origin: 46px 0;">
+    <tspan x="46" dy="0">∏</tspan><tspan x="46" dy="14">1</tspan><tspan x="46" dy="14">コ</tspan>
+    <tspan x="46" dy="14">0</tspan>
+  </text>
+  <text font-family="'Courier New',monospace" font-size="11" fill="url(#matrixGrad)"
+    style="animation: matrixRain 2.6s linear infinite; animation-delay:-0.5s; transform-origin: 62px 0;">
+    <tspan x="62" dy="0">∇</tspan><tspan x="62" dy="14">ナ</tspan><tspan x="62" dy="14">1</tspan>
+  </text>
+
+  <!-- Matrix rain columns (right side) -->
+  <text font-family="'Courier New',monospace" font-size="11" fill="url(#matrixGrad)"
+    style="animation: matrixRain 3.1s linear infinite; animation-delay:-0.8s; transform-origin: 838px 0;">
+    <tspan x="838" dy="0">1</tspan><tspan x="838" dy="14">ホ</tspan><tspan x="838" dy="14">∈</tspan>
+    <tspan x="838" dy="14">0</tspan><tspan x="838" dy="14">1</tspan>
+  </text>
+  <text font-family="'Courier New',monospace" font-size="11" fill="url(#matrixGrad)"
+    style="animation: matrixRain 2.7s linear infinite; animation-delay:-1.5s; transform-origin: 854px 0;">
+    <tspan x="854" dy="0">ア</tspan><tspan x="854" dy="14">0</tspan><tspan x="854" dy="14">∂</tspan>
+  </text>
+  <text font-family="'Courier New',monospace" font-size="11" fill="url(#matrixGrad)"
+    style="animation: matrixRain 3.6s linear infinite; animation-delay:-2s; transform-origin: 870px 0;">
+    <tspan x="870" dy="0">∩</tspan><tspan x="870" dy="14">1</tspan><tspan x="870" dy="14">キ</tspan>
+    <tspan x="870" dy="14">∑</tspan>
+  </text>
+
+  <!-- Scanline sweep -->
+  <rect class="scanline" x="0" y="0" width="900" height="2.5" fill="#00f5ff"/>
+
+  <!-- Hexagon decorations — left -->
+  <polygon class="spinHex" fill="none" stroke="#00f5ff" stroke-width="1"
+    points="85,55 100,64 100,82 85,91 70,82 70,64"
+    style="transform-origin: 85px 73px;"/>
+  <polygon class="spinHexSlow" fill="none" stroke="#00d4e8" stroke-width="0.6"
+    points="85,41 106,53 106,77 85,89 64,77 64,53"
+    style="transform-origin: 85px 65px;"/>
+
+  <!-- Orbital dots — left -->
+  <g style="transform-origin: 85px 65px;">
+    <circle r="3" fill="#00f5ff" filter="url(#glowCyan)"
+      style="animation: orbitDot 4s linear infinite; transform-origin: 85px 65px;"/>
+    <circle r="2.5" fill="#38bdf8" filter="url(#glowCyan)"
+      style="animation: orbitDot2 4s linear infinite; transform-origin: 85px 65px;"/>
+    <circle r="2" fill="#00e5cc" filter="url(#glowCyan)"
+      style="animation: orbitDot3 4s linear infinite; transform-origin: 85px 65px;"/>
+  </g>
+
+  <!-- Hexagon decorations — right -->
+  <polygon class="spinHex" fill="none" stroke="#00f5ff" stroke-width="1"
+    points="815,130 830,139 830,157 815,166 800,157 800,139"
+    style="transform-origin: 815px 148px; animation-delay: -6s;"/>
+  <polygon class="spinHexSlow" fill="none" stroke="#00d4e8" stroke-width="0.6"
+    points="815,116 836,128 836,152 815,164 794,152 794,128"
+    style="transform-origin: 815px 140px;"/>
+
+  <!-- Orbital dots — right -->
+  <g style="transform-origin: 815px 140px;">
+    <circle r="2.8" fill="#00f5ff" filter="url(#glowCyan)"
+      style="animation: orbitDot2 3.5s linear infinite; transform-origin: 815px 140px;"/>
+    <circle r="2" fill="#38bdf8"
+      style="animation: orbitDot3 3.5s linear infinite; transform-origin: 815px 140px;"/>
+  </g>
+
+  <!-- Shimmer bar -->
+  <rect class="shimmer" x="0" y="0" width="220" height="220"
+    fill="url(#cyanGlow)" opacity="0.07"/>
+
+  <!-- Data flow line top -->
+  <line x1="150" y1="40" x2="350" y2="40" stroke="#00f5ff" stroke-width="0.8"
+    stroke-dasharray="8 6" opacity="0.3"
+    style="animation: matrixRain 3s linear infinite; transform-origin: 250px 40px;"/>
+  <line x1="550" y1="180" x2="750" y2="180" stroke="#00f5ff" stroke-width="0.8"
+    stroke-dasharray="8 6" opacity="0.3"
+    style="animation: matrixRain 3s linear infinite reverse; transform-origin: 650px 180px;"/>
+
+  <!-- Main title -->
+  <text x="450" y="96"
+    font-family="'Courier New',Courier,monospace"
+    font-size="58" font-weight="900"
+    text-anchor="middle"
+    fill="url(#titleGrad)"
+    filter="url(#glowStrong)"
+    class="fadein">
+    DARK SWAP
+  </text>
+
+  <!-- Subtitle -->
+  <text x="450" y="130"
+    font-family="'Courier New',Courier,monospace"
+    font-size="13"
+    text-anchor="middle"
+    fill="#38bdf8"
+    opacity="0.9"
+    class="fadein"
+    style="animation-delay: 0.25s; opacity: 0;">
+    Privacy-First DEX · Next.js 16 · Solana · Framer Motion
+  </text>
+
+  <!-- Tag pills -->
+  <g class="fadein" style="animation-delay: 0.5s; opacity: 0;">
+    <!-- Multi-Oracle pill -->
+    <rect x="178" y="148" width="92" height="18" rx="9" fill="#00f5ff" opacity="0.08" stroke="#00f5ff" stroke-width="0.5" opacity="0.3"/>
+    <text x="224" y="161" font-family="'Courier New',monospace" font-size="9" text-anchor="middle" fill="#00f5ff">Multi-Oracle</text>
+    <!-- MEV Shield pill -->
+    <rect x="279" y="148" width="82" height="18" rx="9" fill="#00e5cc" opacity="0.08" stroke="#00e5cc" stroke-width="0.5" opacity="0.3"/>
+    <text x="320" y="161" font-family="'Courier New',monospace" font-size="9" text-anchor="middle" fill="#00e5cc">MEV Shield</text>
+    <!-- ZK Pool pill -->
+    <rect x="370" y="148" width="70" height="18" rx="9" fill="#38bdf8" opacity="0.08" stroke="#38bdf8" stroke-width="0.5" opacity="0.3"/>
+    <text x="405" y="161" font-family="'Courier New',monospace" font-size="9" text-anchor="middle" fill="#38bdf8">ZK Pool</text>
+    <!-- Ephemeral pill -->
+    <rect x="449" y="148" width="82" height="18" rx="9" fill="#a78bfa" opacity="0.08" stroke="#a78bfa" stroke-width="0.5" opacity="0.3"/>
+    <text x="490" y="161" font-family="'Courier New',monospace" font-size="9" text-anchor="middle" fill="#a78bfa">Ephemeral</text>
+    <!-- Convex pill -->
+    <rect x="540" y="148" width="60" height="18" rx="9" fill="#f472b6" opacity="0.08" stroke="#f472b6" stroke-width="0.5" opacity="0.3"/>
+    <text x="570" y="161" font-family="'Courier New',monospace" font-size="9" text-anchor="middle" fill="#f472b6">Convex RT</text>
+    <!-- TEE pill -->
+    <rect x="609" y="148" width="52" height="18" rx="9" fill="#34d399" opacity="0.08" stroke="#34d399" stroke-width="0.5" opacity="0.3"/>
+    <text x="635" y="161" font-family="'Courier New',monospace" font-size="9" text-anchor="middle" fill="#34d399">TEE AI</text>
+  </g>
+
+  <!-- Bottom glow bar -->
+  <rect x="0" y="201" width="900" height="1" fill="url(#cyanGlow)" opacity="0.7"/>
+
+  <!-- Footer text -->
+  <text x="450" y="215"
+    font-family="'Courier New',Courier,monospace"
+    font-size="9"
+    text-anchor="middle"
+    fill="#0e7490"
+    class="fadein"
+    style="animation-delay: 0.75s; opacity: 0;">
+    Jupiter Ultra · DFlow · Birdeye · MagicBlock · Zcash Sapling · Convex · RedPill TEE
+  </text>
+
+  <!-- Blinking cursor after title -->
+  <rect class="blink" x="740" y="77" width="12" height="3" fill="#00f5ff"/>
+
+  <!-- Pulsing status dot -->
+  <circle cx="450" cy="185" r="2.5" fill="#00ff41" filter="url(#glowGreen)"
+    style="animation: pulse 2s ease-in-out infinite;"/>
+  <text x="460" y="189"
+    font-family="'Courier New',monospace" font-size="8"
+    fill="#00ff41" opacity="0.6">mainnet live</text>
+</svg>

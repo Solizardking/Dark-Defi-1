@@ -17,6 +17,9 @@ convex/*.js
 convex/*.js.map
 !convex/_generated/*.js
 
+# Convex AI skill files — generated, re-install with: npx convex ai-files install
+.agents/
+
 # Secrets — never commit
 .env
 .env.*

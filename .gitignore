@@ -1,6 +1,6 @@
 # Dependencies
 node_modules/
-darkswap
+
 # Vendored upstream — fetch separately, never commit
 magicblock-engine-examples-main/
 

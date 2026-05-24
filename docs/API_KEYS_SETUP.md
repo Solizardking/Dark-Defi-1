@@ -187,7 +187,7 @@ Expected: JSON with SOL price
 ### Using Provided Helius Key
 
 ```bash
-cd /Users/8bit/Downloads/Dark-Wallet/dark-terminal
+cd <path-to>/Dark-Defi/packages/terminal
 
 # Configure with provided keys
 ./target/release/dark config \

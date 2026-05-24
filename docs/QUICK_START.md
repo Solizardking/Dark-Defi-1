@@ -12,7 +12,7 @@ A complete implementation of Zcash's Sapling privacy protocol for Solana, includ
 
 ```bash
 # Fix the original issue - use cargo build-sbf instead of cargo build-bpf
-cd /Users/8bit/Downloads/ClaudeCash-master/dark-protocol
+cd <path-to>/Dark-Defi
 
 # Build the shielded wallet program
 cargo build-sbf --manifest-path programs/shielded-wallet/Cargo.toml

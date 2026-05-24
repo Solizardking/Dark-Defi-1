@@ -1,7 +1,7 @@
 {
   "name": "dark-defi",
-  "version": "0.2.0",
-  "description": "Dark DeFi — Privacy-first Solana DeFi suite with shielded wallets, TEE agents, Zcash Sapling integration, and x402 private payments",
+  "version": "0.2.1",
+  "description": "Dark DeFi — Privacy-first Solana DeFi suite with shielded wallets, TEE agents (Clawd), Zcash Sapling integration, and x402 private payments",
   "main": "index.js",
   "types": "index.d.ts",
   "type": "commonjs",
@@ -21,20 +21,20 @@
     "shielded",
     "wallet",
     "ai-agents",
-    "confidential"
+    "confidential",
+    "clawd"
   ],
-  "author": "Dark Protocol Team <openclawdsolana>",
+  "author": "Dark Protocol",
   "license": "Apache-2.0",
   "dependencies": {
-    "@openclawdsolana/dark-protocol": "^0.2.0",
-    "@openclawdsolana/dark-sdk": "^0.3.0",
-    "@openclawdsolana/dark-tee-agents": "^0.1.0",
-    "dark-x402-terminal": "^1.0.0",
-    "sas-lib": "^1.0.10"
+    "@openclawdsol/dark-protocol": "^0.2.0",
+    "@openclawdsol/dark-protocol-sdk": "^0.3.1",
+    "@openclawdsol/dark-tee-agents": "^0.1.0",
+    "sas-lib": "*"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/openclawdsol/dark-defi"
+    "url": "https://github.com/x402agent/dark-defi"
   },
   "publishConfig": {
     "access": "public"

@@ -12,6 +12,11 @@ dist/
 build/
 *.tsbuildinfo
 
+# Convex source is TypeScript. Do not keep emitted JS beside it.
+convex/*.js
+convex/*.js.map
+!convex/_generated/*.js
+
 # Secrets — never commit
 .env
 .env.*

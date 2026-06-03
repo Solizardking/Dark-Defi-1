@@ -1,0 +1,44 @@
+# Local secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# Dependency installs
+node_modules/
+**/node_modules/
+.bun/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+coverage/
+artifacts/
+target/
+**/target/
+.wrangler/
+**/.wrangler/
+
+# Private/local integration surfaces
+cloudflare-agent-api/
+config/
+
+# Runtime state
+.dark-ralph/
+.sessions/
+**/.sessions/
+*.log
+*.pid
+*.tsbuildinfo
+*.pyc
+__pycache__/
+**/__pycache__/
+.netlify/
+**/.netlify/
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
+*.swp

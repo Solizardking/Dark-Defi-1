@@ -32,8 +32,8 @@ dist/
 dark-protocol-program/target/
 dark-protocol-program/.anchor/
 
-# DarkSwap Next.js build
-darkswap/.next/
+# DarkSwap — now its own repo
+darkswap/
 
 # Compiled output emitted next to TypeScript source
 packages/protocol/**/*.js

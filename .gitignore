@@ -31,6 +31,8 @@ dist/
 # Anchor program build artifacts (large .so and C cache — rebuild from source)
 dark-protocol-program/target/
 dark-protocol-program/.anchor/
+programs/target/
+programs/.anchor/
 
 # DarkSwap — now its own repo
 darkswap/

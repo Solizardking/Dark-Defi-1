@@ -1,9 +1,9 @@
 # Dependencies
 node_modules/
-
+dark defi terminal
 # Vendored upstream — fetch separately, never commit
 magicblock-engine-examples-main/
-
+clawd-fm
 # Secrets & credentials — NEVER commit these
 .secrets/
 .env

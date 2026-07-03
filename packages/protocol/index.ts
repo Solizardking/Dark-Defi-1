@@ -17,6 +17,7 @@ export * from './note-encryption';
 
 // Network Configuration
 export * from './config';
+export * from './programs';
 
 // Re-export Helius SDK components
 // export {

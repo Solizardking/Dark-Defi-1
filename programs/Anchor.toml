@@ -9,14 +9,20 @@ skip-lint = false
 [programs.localnet]
 solana_ai_inference = "3xFBRCtk5hxeLWzHvwyDg2B67RHoA9JFTKmHPzzccBVc"
 clawd_stake = "5bp3bDnWYdjiYyB99XWWi6h8ga2wnB1TxuRUb4VNJrTn"
+solana_gpt_oracle = "LLMrieZMpbJFwN52WgmBNMxYojrpRVYXdC1RCweEbab"
+agent_minter = "agnmDKzZkv63sRhPFvm3iWpxaopgTRcohXA6CSYSXvQ"
 
 [programs.devnet]
 solana_ai_inference = "3xFBRCtk5hxeLWzHvwyDg2B67RHoA9JFTKmHPzzccBVc"
 clawd_stake = "5bp3bDnWYdjiYyB99XWWi6h8ga2wnB1TxuRUb4VNJrTn"
+solana_gpt_oracle = "LLMrieZMpbJFwN52WgmBNMxYojrpRVYXdC1RCweEbab"
+agent_minter = "agnmDKzZkv63sRhPFvm3iWpxaopgTRcohXA6CSYSXvQ"
 
 [programs.mainnet]
 solana_ai_inference = "3xFBRCtk5hxeLWzHvwyDg2B67RHoA9JFTKmHPzzccBVc"
 clawd_stake = "5bp3bDnWYdjiYyB99XWWi6h8ga2wnB1TxuRUb4VNJrTn"
+solana_gpt_oracle = "LLMrieZMpbJFwN52WgmBNMxYojrpRVYXdC1RCweEbab"
+agent_minter = "agnmDKzZkv63sRhPFvm3iWpxaopgTRcohXA6CSYSXvQ"
 
 [registry]
 url = "https://api.apr.dev"

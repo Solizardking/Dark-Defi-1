@@ -4,10 +4,12 @@
   "description": "Dark Protocol DeFi Terminal with Privacy-Preserving Features",
   "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "programs/client"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
+    "build:solana-client": "npm run build -w @clawd/solanaos-protocol-client",
     "build:sas": "npm run build -w sas-lib",
     "build:protocol": "tsc -p packages/protocol",
     "build:sdk": "npm run build -w @openclawdsol/dark-protocol-sdk",

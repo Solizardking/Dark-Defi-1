@@ -1,7 +1,10 @@
 [workspace]
 members = [
     "solana-ai-inference",
-    "clawd-stake"
+    "clawd-stake",
+    "solana-gpt-oracle",
+    "agent-minter",
+    "llm_oracle"
 ]
 exclude = [
     "mpl-corenft-staking",

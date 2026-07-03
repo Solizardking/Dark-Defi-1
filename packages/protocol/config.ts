@@ -4,6 +4,7 @@
  */
 
 import { clusterApiUrl, Cluster } from '@solana/web3.js';
+import { DARK_PROTOCOL_PROGRAM_ID } from './programs';
 
 /**
  * RPC Configuration for different networks
@@ -78,7 +79,6 @@ export function getRPCEndpoint(
     throw new Error(`Unknown cluster: ${cluster}`);
   }
 
-  // Use secure RPC if available and requested
   if (useSecure && config.secureRpc) {
     return config.secureRpc;
   }
@@ -103,10 +103,10 @@ export function getWSEndpoint(
  * Dark Protocol program IDs for different networks
  */
 export const PROGRAM_IDS = {
-  mainnet: 'DARKxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXx',
-  devnet: 'DARKxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXx',
-  testnet: 'DARKxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXx',
-  localnet: 'DARKxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXx',
+  mainnet: DARK_PROTOCOL_PROGRAM_ID,
+  devnet: DARK_PROTOCOL_PROGRAM_ID,
+  testnet: DARK_PROTOCOL_PROGRAM_ID,
+  localnet: DARK_PROTOCOL_PROGRAM_ID,
 } as const;
 
 /**
@@ -165,16 +165,8 @@ export function resolveConfig(config: SDKConfig = {}): Required<Omit<SDKConfig, 
  * ```typescript
  * import { resolveConfig } from '@dark-protocol/sdk';
  *
- * // Use devnet with standard RPC
  * const config1 = resolveConfig({ cluster: 'devnet' });
- *
- * // Use devnet with secure RPC
- * const config2 = resolveConfig({
- *   cluster: 'devnet',
- *   useSecureRpc: true
- * });
- *
- * // Use mainnet with custom program ID
+ * const config2 = resolveConfig({ cluster: 'devnet', useSecureRpc: true });
  * const config3 = resolveConfig({
  *   cluster: 'mainnet',
  *   programId: 'YourProgramId...',

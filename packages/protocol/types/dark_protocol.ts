@@ -1,5 +1,5 @@
 export type DarkProtocol = {
-  "address": "DARKxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXx",
+  "address": "E8zL7h9qHjC7sMf2WCYhdqS5iLkYhPJ9yAhTfevo74jm",
   "metadata": {
     "name": "dark_protocol",
     "version": "0.2.0",
@@ -127,7 +127,7 @@ export type DarkProtocol = {
 };
 
 export const IDL: DarkProtocol = {
-  "address": "DARKxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXx",
+  "address": "E8zL7h9qHjC7sMf2WCYhdqS5iLkYhPJ9yAhTfevo74jm",
   "metadata": {
     "name": "dark_protocol",
     "version": "0.2.0",

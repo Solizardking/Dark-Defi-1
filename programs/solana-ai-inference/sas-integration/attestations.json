@@ -1,0 +1,28 @@
+{
+  "cluster": "devnet",
+  "solanaAiInferenceProgram": "3dLst2E3djtCSwG19mFS3REHxtZPngjyga7iYZLDL5xj",
+  "solanaAttestationService": {
+    "programId": "22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG",
+    "source": "../../solana-attestation-service",
+    "programSource": "../../solana-attestation-service/program",
+    "typescriptClient": "sas-lib",
+    "rustClient": "../../solana-attestation-service/clients/rust"
+  },
+  "schemas": [
+    {
+      "name": "CLAWD-GENESIS-MODEL-V1",
+      "credential": "CLAWD-GENESIS-REGISTRY",
+      "fields": ["cohort", "model_id", "model_hash", "metadata_uri", "ollama_tag"]
+    },
+    {
+      "name": "CLAWD-MODEL-REGISTRATION-V1",
+      "credential": "CLAWD-MODEL-REGISTRY",
+      "fields": ["asset", "authority", "model_identity", "model_hash", "metadata_uri", "huggingface_repo"]
+    },
+    {
+      "name": "DNA-ANALYSIS-PROOF",
+      "credential": "DNA-PROTOCOL-V1",
+      "fields": ["wallet", "dna_hash", "metadata_uri", "analysis_version"]
+    }
+  ]
+}

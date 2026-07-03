@@ -2,6 +2,7 @@ import { Connection, PublicKey, Transaction, Keypair } from '@solana/web3.js';
 import { AnchorProvider, Program, Idl } from '@coral-xyz/anchor';
 // import { createHelius } from 'helius-sdk'; // Not used in current version
 import type { DarkProtocol } from './types/dark_protocol';
+import { DARK_PROTOCOL_PROGRAM_ID } from './programs';
 
 export type Network = 'devnet' | 'mainnet' | 'localnet';
 
@@ -66,7 +67,7 @@ export class DarkProtocolClient {
     const helius = null as any;
 
     // Load program IDL and create Anchor program
-    const programId = config.programId || new PublicKey('DARKxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXx');
+    const programId = config.programId || new PublicKey(DARK_PROTOCOL_PROGRAM_ID);
     const provider = new AnchorProvider(connection, {} as any, {
       commitment: config.commitment || 'confirmed'
     });
